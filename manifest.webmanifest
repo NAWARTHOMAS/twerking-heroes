@@ -1,0 +1,15 @@
+{
+  "name": "Twerking Heroes",
+  "short_name": "Twerking",
+  "description": "Jeu de rythme tropical : le téléphone dans la poche arrière, on twerke sur le beat.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#2a0f45",
+  "theme_color": "#2a0f45",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

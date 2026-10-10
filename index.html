@@ -1,0 +1,2455 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2a0f45">
+<meta name="description" content="Jeu de rythme tropical : le téléphone dans la poche arrière, on twerke sur le beat.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Twerking Heroes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body style="margin:0">
+<title>Twerking Heroes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap">
+<style>
+  /* Layout: menus en panneaux vitrés posés sur un coucher de soleil tropical (ciel, soleil rayé, mer, palmiers en silhouette) ; salon télé en deux colonnes ; partie en plein écran sur canvas avec le même décor animé. Thème sombre assumé. */
+  :root {
+    --bg: #1a0b2e;
+    --panel: rgba(28, 12, 46, 0.74);
+    --panel-solid: #24103a;
+    --line: rgba(255, 214, 196, 0.2);
+    --fg: #fff6e8;
+    --muted: #f0cfdc;
+    --peach: #ffb547;
+    --pink: #ff3d7f;
+    --gold: #ffe066;
+    --palm: #2ec4a0;
+    --sea: #148a96;
+    --sil: #22102e;
+    --denim: #3d5aa8;
+    --grey: #9a8aa0;
+    --p1: #ff8f5a;
+    --p2: #3fd6e6;
+    --p3: #c9a2ff;
+    --p4: #a6e35f;
+    --display: 'Lilita One', 'Arial Rounded MT Bold', 'Arial Black', system-ui, sans-serif;
+    --body: 'Bricolage Grotesque', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color-scheme: dark;
+  }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    background: linear-gradient(180deg, #2a0f45 0%, #8e2a6b 28%, #e8565a 47%, #ffb65c 60%, #1f8a96 60%, #145e6e 72%, #0a2a38 100%) fixed, var(--bg);
+    color: var(--fg);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button, input { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+
+  .screen { min-height: 100%; position: relative; z-index: 1; }
+
+  /* --- Décor tropical (menus) --- */
+  .scenery { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+  .scenery .sun { position: absolute; left: 50%; width: 46vmin; height: 46vmin; top: calc(60vh - 38vmin); transform: translateX(-50%); }
+  .scenery .glare { position: absolute; left: 50%; top: 60vh; width: 60vmin; height: 40vh; transform: translateX(-50%);
+    background: repeating-linear-gradient(180deg, rgba(255, 214, 120, 0.5) 0 0.6vh, transparent 0.6vh 2.6vh);
+    -webkit-mask-image: radial-gradient(60% 100% at 50% 0%, #000 30%, transparent 75%); mask-image: radial-gradient(60% 100% at 50% 0%, #000 30%, transparent 75%);
+    animation: glare 3.5s ease-in-out infinite alternate; }
+  @keyframes glare { from { transform: translateX(-52%) scaleX(0.92); } to { transform: translateX(-48%) scaleX(1.05); } }
+  .scenery .palm { position: absolute; bottom: -2vh; height: min(88vh, 150vw); width: auto; color: var(--sil); transform-origin: 36% 100%; animation: sway 6s ease-in-out infinite alternate; }
+  .scenery .palm.left { left: max(-14vh, -24vw); }
+  .scenery .palm.right { right: max(-14vh, -24vw); transform: scaleX(-1); animation-name: sway-r; animation-duration: 7s; }
+  @keyframes sway { from { rotate: -1.2deg; } to { rotate: 1.5deg; } }
+  @keyframes sway-r { from { rotate: 1.2deg; } to { rotate: -1.5deg; } }
+  .scenery .island { position: absolute; left: 6vw; top: calc(60vh - 7vh); height: 7.2vh; width: auto; color: var(--sil); }
+  .wrap {
+    max-width: 560px;
+    margin: 0 auto;
+    padding-inline: 16px;
+    padding-block: 28px 40px;
+    display: grid;
+    gap: 22px;
+  }
+  .wrap.wide { max-width: 1100px; }
+
+  /* --- Logo --- */
+  .logo { display: grid; gap: 10px; justify-items: start; }
+  .logo h1 {
+    margin: 0;
+    letter-spacing: 0.02em;
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: clamp(2.6rem, 13vw, 4.2rem);
+    line-height: 0.92;
+    letter-spacing: 0.01em;
+  }
+  .logo h1 span { display: block; }
+  .l1 { color: var(--peach); }
+  .l1 { text-shadow: 0.05em 0.05em 0 var(--sil); }
+  .l2 { color: var(--pink); text-shadow: 0.05em 0.05em 0 var(--sil); }
+  .logo p { margin: 0; color: var(--fg); font-size: 1.08rem; max-width: 34ch; text-shadow: 0 1px 6px rgba(30, 5, 40, 0.8); }
+  .mark { display: flex; align-items: center; gap: 10px; font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg); font-weight: 800; text-shadow: 0 1px 6px rgba(30, 5, 40, 0.8); }
+
+  /* --- Choix du mode --- */
+  .modes { display: grid; gap: 12px; }
+  .mode {
+    appearance: none; text-align: left; cursor: pointer;
+    display: grid; gap: 4px;
+    padding: 18px 18px;
+    border-radius: 18px;
+    border: 2px solid var(--line);
+    background: var(--panel);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    transition: border-color .15s, transform .1s;
+  }
+  .mode:hover { border-color: var(--pink); }
+  .mode:active { transform: scale(0.99); }
+  .mode .k { font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--peach); font-weight: 800; }
+  .mode b { font-family: var(--display); font-weight: 400; font-size: 1.3rem; line-height: 1.15; }
+  .mode span:last-child { color: var(--muted); font-size: 0.95rem; }
+  .toggle { display: flex; gap: 12px; align-items: center; padding: 12px 16px; border-radius: 14px; background: var(--panel); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid var(--line); cursor: pointer; }
+  .toggle input { width: 22px; height: 22px; accent-color: var(--pink); flex: none; }
+  .toggle span { display: grid; }
+  .toggle small { color: var(--muted); font-size: 0.85rem; }
+  .mode.main { border-color: var(--pink); background: color-mix(in srgb, var(--pink) 14%, var(--panel)); }
+
+  /* --- Panneaux --- */
+  .panel {
+    background: var(--panel);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 18px 16px;
+    display: grid;
+    gap: 14px;
+    min-width: 0;
+  }
+  .panel h2, .h2 {
+    margin: 0;
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 1rem;
+    letter-spacing: 0.04em;
+    color: var(--peach);
+  }
+  .screen-title { text-shadow: 0.05em 0.05em 0 var(--sil); margin: 0; font-family: var(--display); font-weight: 400; font-size: 1.7rem; line-height: 1.1; text-wrap: balance; }
+  .steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; counter-reset: s; }
+  .steps li { display: grid; grid-template-columns: 2rem 1fr; gap: 10px; align-items: baseline; }
+  .steps li::before {
+    counter-increment: s;
+    content: counter(s);
+    font-family: var(--display);
+    color: var(--bg);
+    background: var(--peach);
+    width: 1.7rem; height: 1.7rem;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: 0.9rem;
+  }
+  .steps span { color: var(--muted); }
+
+  /* --- Morceaux --- */
+  .tracks { display: grid; gap: 10px; }
+  .track { position: relative; }
+  .track input { position: absolute; opacity: 0; pointer-events: none; }
+  .track label, .track-btn {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2px 12px;
+    padding: 14px;
+    border-radius: 14px;
+    border: 2px solid var(--line);
+    background: rgba(0, 0, 0, 0.28);
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+  }
+  .track input:checked + label, .track-btn[aria-pressed="true"] { border-color: var(--pink); background: color-mix(in srgb, var(--pink) 12%, var(--panel)); }
+  .track input:focus-visible + label { outline: 3px solid var(--gold); outline-offset: 3px; }
+  .name { font-weight: 800; font-size: 1.12rem; }
+  .meta { color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+  .level { grid-row: 1 / span 2; grid-column: 2; align-self: center; display: flex; gap: 4px; }
+  .level i { width: 12px; height: 12px; border-radius: 50%; background: var(--line); display: block; }
+  .level i.on { background: var(--peach); }
+  .best { color: var(--gold); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+
+  /* --- Capteur --- */
+  .meter { position: relative; height: 22px; border-radius: 11px; background: rgba(0, 0, 0, 0.35); overflow: hidden; border: 1px solid var(--line); }
+  .meter .fill { position: absolute; inset: 0 auto 0 0; width: 0%; background: linear-gradient(90deg, var(--peach), var(--pink)); }
+  .meter .th { position: absolute; top: -2px; bottom: -2px; left: 66.6%; width: 3px; background: var(--gold); }
+  .sensor-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+  .sensor-status { color: var(--muted); font-size: 0.92rem; min-width: 0; flex: 1 1 200px; }
+  .twerk-count { font-family: var(--display); font-size: 1.1rem; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .flash { animation: pop .25s ease-out; }
+  @keyframes pop { from { transform: scale(1.4); color: var(--pink); } to { transform: scale(1); } }
+  .calib-now { justify-items: center; text-align: center; }
+  .calib-steps { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .calib-steps li { padding: 4px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); font-weight: 600; font-size: 0.9rem; }
+  .calib-steps li[data-state="now"] { background: var(--pink); border-color: var(--pink); color: var(--bg); }
+  .calib-steps li[data-state="done"] { color: var(--palm); border-color: var(--palm); }
+  .calib-step { font-family: var(--display); font-size: clamp(1.4rem, 3vw, 2.4rem); color: var(--peach); }
+  .calib-row { display: flex; align-items: center; gap: 18px; }
+  .calib-big { font-family: var(--display); font-size: clamp(3rem, 9vw, 7rem); line-height: 1; color: var(--fg); font-variant-numeric: tabular-nums; }
+  .calib-dot { width: clamp(28px, 4vw, 56px); aspect-ratio: 1; border-radius: 50%; background: var(--gold); opacity: 0.35; }
+  .calib-card .calib-who { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .calib-card .calib-who .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--pc); flex: none; }
+  .calib-card .calib-who b { font-size: 1.2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .calib-card .up { margin-left: auto; color: var(--palm); font-weight: 600; font-size: 0.9rem; }
+  .calib-card .up.err { color: var(--gold); }
+  .calib-card .mini { height: 10px; border-radius: 5px; background: rgba(0, 0, 0, 0.35); overflow: hidden; }
+  .calib-card .mini i { display: block; height: 100%; width: 0%; background: var(--pc); }
+  .calib-card.hit { outline: 3px solid var(--pc); }
+  .marks { display: flex; flex-wrap: wrap; gap: 4px; min-height: 12px; }
+  .marks i { width: 14px; height: 14px; border-radius: 50%; background: var(--line); }
+  .marks i.good { background: var(--palm); }
+  .marks i.ok { background: var(--gold); }
+  .side-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+  .side-row .msg { flex: 1 1 200px; min-width: 0; font-size: 0.9rem; }
+  .side-chip { font-family: var(--display); font-size: 1.1rem; padding: 6px 12px; border-radius: 10px; background: rgba(0, 0, 0, 0.35); color: var(--muted); min-width: 7.5em; text-align: center; }
+  .side-chip[data-side="L"] { color: var(--p2); }
+  .side-chip[data-side="R"] { color: var(--p4); }
+  .side-chip[data-side="C"] { color: var(--gold); }
+  .check { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+  .check input { width: 20px; height: 20px; accent-color: var(--pink); flex: none; margin-top: 2px; }
+  .check small { display: block; color: var(--muted); font-size: 0.82rem; }
+  .legend { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+  .legend li { display: grid; grid-template-columns: 6.5em 1fr; gap: 10px; align-items: baseline; }
+  .legend b { font-family: var(--display); font-weight: 400; color: var(--gold); }
+  .legend span { color: var(--muted); }
+  .field { display: grid; gap: 6px; }
+  .field .row { display: flex; justify-content: space-between; gap: 8px; font-size: 0.95rem; }
+  .field .row output { color: var(--gold); font-variant-numeric: tabular-nums; font-weight: 600; }
+  .field small { color: var(--muted); font-size: 0.82rem; }
+  input[type=range] { width: 100%; accent-color: var(--pink); }
+  .text-in {
+    width: 100%; box-sizing: border-box;
+    padding: 14px; border-radius: 12px;
+    border: 2px solid var(--line); background: rgba(0, 0, 0, 0.35);
+    font-size: 1.2rem;
+  }
+  .text-in.code { font-family: var(--display); font-size: 2.2rem; letter-spacing: 0.3em; text-align: center; }
+  .text-in:focus { border-color: var(--pink); outline: none; }
+
+  .btn {
+    appearance: none;
+    border: 0;
+    border-radius: 14px;
+    padding: 14px 18px;
+    font-weight: 800;
+    cursor: pointer;
+    background: var(--line);
+    color: var(--fg);
+  }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn.small { padding: 9px 14px; font-size: 0.9rem; border-radius: 10px; }
+  .btn.go {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 1.35rem;
+    padding: 18px;
+    background: var(--pink);
+    color: #1d0816;
+    box-shadow: 0 6px 0 #a3134f;
+    transition: transform .08s, box-shadow .08s;
+  }
+  .btn.go:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 2px 0 #a3134f; }
+  .btn.ghost { background: transparent; border: 2px solid var(--line); }
+  .back { justify-self: start; }
+  .notes { color: var(--muted); font-size: 0.88rem; margin: 0; display: grid; gap: 4px; }
+  .msg { margin: 0; color: var(--muted); }
+  .msg.err { color: var(--gold); font-weight: 600; }
+
+  /* --- Salon (télé) --- */
+  #lobby { font-size: clamp(16px, 1.25vw, 26px); }
+  .lobby {
+    max-width: 1500px; margin: 0 auto;
+    padding-inline: 16px; padding-block: 24px 32px;
+    display: grid; gap: 24px;
+  }
+  @media (min-width: 900px) { .lobby { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); align-items: start; padding-inline: 3vw; } }
+  .join-card { display: grid; gap: 14px; justify-items: center; text-align: center; background: var(--panel); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid var(--line); border-radius: 1.2em; padding: 1.4em 1em; }
+  .join-card .logo-s { font-family: var(--display); font-size: 2.2em; line-height: 0.95; }
+  .qr { width: min(16em, 70vw); aspect-ratio: 1; max-width: 100%; background: var(--fg); border-radius: 0.8em; padding: 0.6em; box-sizing: border-box; display: grid; place-items: center; }
+  .qr svg { width: 100%; height: 100%; display: block; }
+  .qr .ph { color: var(--bg); font-weight: 600; padding: 1em; }
+  .code-lbl { font-size: 0.75em; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); font-weight: 800; }
+  .code { font-family: var(--display); font-size: 4.4em; line-height: 1; letter-spacing: 0.12em; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .url { color: var(--muted); font-size: 0.85em; word-break: break-all; max-width: 28em; }
+  .lobby-side { display: grid; gap: 18px; min-width: 0; background: var(--panel); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid var(--line); border-radius: 1.2em; padding: 1.2em; }
+  .slots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .slot {
+    --pc: var(--line);
+    border-radius: 16px; border: 2px dashed var(--line);
+    padding: 14px; display: grid; gap: 8px; min-width: 0;
+  }
+  .slot { background: var(--panel); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  .slot.on { border-style: solid; border-color: var(--pc); background: color-mix(in srgb, var(--pc) 16%, var(--panel-solid)); }
+  .slot .who { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .slot .dot { width: 0.9em; height: 0.9em; border-radius: 50%; background: var(--pc); flex: none; }
+  .slot .nm { font-weight: 800; font-size: 1.15em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .slot .wait { color: var(--muted); }
+  .slot .mini { height: 10px; border-radius: 5px; background: rgba(0, 0, 0, 0.35); overflow: hidden; }
+  .slot .mini i { display: block; height: 100%; width: 0%; background: var(--pc); }
+  .slot .tw { font-family: var(--display); color: var(--gold); font-size: 0.85em; min-height: 1.3em; }
+  .lobby .tracks { grid-template-columns: repeat(auto-fit, minmax(13em, 1fr)); }
+
+  /* --- Manette --- */
+  .pad-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .pad-head .dot { width: 18px; height: 18px; border-radius: 50%; background: var(--peach); }
+  .pad-head b { font-family: var(--display); font-weight: 400; font-size: 1.3rem; }
+  .pad-head .st { margin-left: auto; color: var(--muted); font-size: 0.9rem; }
+  .pad-big { display: grid; gap: 14px; justify-items: center; text-align: center; padding-block: 8vh; }
+  .pad-big .huge { font-family: var(--display); font-size: clamp(2.4rem, 12vw, 4rem); line-height: 1; color: var(--peach); text-wrap: balance; }
+  .pad-big .num { font-family: var(--display); font-size: 5rem; line-height: 1; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .pad-taps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; }
+  .pad-taps .btn { aspect-ratio: 1; border-radius: 50%; font-size: 2rem; padding: 0; }
+
+  /* --- Compte à rebours --- */
+  #pocket { display: grid; place-items: center; text-align: center; padding-inline: 16px; height: 100%; }
+  #pocket .inner { display: grid; gap: 16px; justify-items: center; max-width: 34rem; background: var(--panel); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid var(--line); border-radius: 24px; padding: 28px 20px; }
+  #count { font-family: var(--display); font-size: clamp(6rem, 30vmin, 14rem); line-height: 1; color: var(--peach); font-variant-numeric: tabular-nums; }
+  #pocket h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(1.4rem, 3vw, 2.4rem); text-wrap: balance; }
+  #pocket p { margin: 0; color: var(--muted); font-size: clamp(1rem, 1.6vw, 1.5rem); }
+  .pocket-ill { width: 120px; height: auto; }
+
+  /* --- Partie --- */
+  #play { position: fixed; inset: 0; background: var(--bg); touch-action: none; user-select: none; -webkit-user-select: none; }
+  #stage, #stage3d { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #quit {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+    border: 2px solid var(--line); border-radius: 999px;
+    background: linear-gradient(90deg, var(--line) var(--p, 0%), color-mix(in srgb, var(--bg) 80%, transparent) var(--p, 0%));
+    color: var(--muted); padding: 8px 16px; font-size: 0.85rem; font-weight: 600;
+  }
+
+  /* --- Résultats --- */
+  .podium { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 14px; }
+  .card { --pc: var(--peach); display: grid; gap: 12px; align-content: start; }
+  .card .top { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; }
+  .card .rank {
+    width: 4.6rem; height: 4.6rem; border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: var(--display); font-size: 2.6rem; line-height: 1;
+    background: var(--pc); color: var(--bg);
+    box-shadow: 0 0 0 4px var(--panel-solid), 0 0 0 6px var(--gold);
+  }
+  .card .place { font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); font-weight: 800; }
+  .card .who b { display: block; font-size: 1.2rem; overflow-wrap: anywhere; }
+  .card .who span { color: var(--muted); }
+  .score-big { font-family: var(--display); font-size: clamp(2rem, 9vw, 2.8rem); color: var(--gold); line-height: 1; font-variant-numeric: tabular-nums; }
+  .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; margin: 0; }
+  .stats div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--line); padding-bottom: 5px; }
+  .stats dt { color: var(--muted); }
+  .stats dd { margin: 0; font-weight: 800; font-variant-numeric: tabular-nums; }
+  #r-best.record { color: var(--gold); font-weight: 800; }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 560px; }
+  @media (prefers-reduced-motion: reduce) { .scenery .palm, .scenery .glare { animation: none; } .flash { animation: none; } .btn.go, .mode { transition: none; } }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="palm-s" viewBox="0 0 200 400">
+    <path fill="currentColor" d="M58 400 C 62 320 70 230 112 112 L 126 118 C 92 232 86 322 86 400 Z"/>
+    <path fill="currentColor" d="M119 112 C 150 88 190 96 200 150 C 186 124 160 116 121 120 Z M119 112 C 140 70 178 60 196 76 C 170 74 146 88 122 116 Z M119 112 C 118 70 132 40 156 30 C 140 52 132 80 124 114 Z M119 112 C 96 70 60 62 40 74 C 68 76 94 90 116 116 Z M119 112 C 84 92 40 100 26 156 C 44 128 76 116 117 120 Z M119 112 C 96 112 70 140 64 190 C 80 156 98 134 120 118 Z M119 112 C 146 118 166 150 166 196 C 154 160 138 138 120 118 Z"/>
+    <circle fill="currentColor" cx="112" cy="122" r="7"/><circle fill="currentColor" cx="127" cy="124" r="7"/><circle fill="currentColor" cx="119" cy="133" r="6"/>
+  </symbol>
+  <symbol id="hibiscus-s" viewBox="-50 -50 100 100">
+    <g fill="#ff3d7f"><ellipse rx="17" ry="26" cy="-22"/><ellipse rx="17" ry="26" cy="-22" transform="rotate(72)"/><ellipse rx="17" ry="26" cy="-22" transform="rotate(144)"/><ellipse rx="17" ry="26" cy="-22" transform="rotate(216)"/><ellipse rx="17" ry="26" cy="-22" transform="rotate(288)"/></g>
+    <circle r="9" fill="#a3134f"/><path d="M0 0 L14 -30" stroke="#ffe066" stroke-width="4" stroke-linecap="round"/><circle cx="14" cy="-31" r="5" fill="#ffe066"/>
+  </symbol>
+</svg>
+<div class="scenery" aria-hidden="true">
+  <svg class="sun" viewBox="0 0 200 200">
+    <defs>
+      <linearGradient id="sun-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe66b"/><stop offset="1" stop-color="#ff5f7e"/></linearGradient>
+      <mask id="sun-m"><rect width="200" height="200" fill="#fff"/><rect y="104" width="200" height="5" fill="#000"/><rect y="120" width="200" height="7" fill="#000"/><rect y="138" width="200" height="9" fill="#000"/><rect y="158" width="200" height="11" fill="#000"/></mask>
+    </defs>
+    <circle cx="100" cy="100" r="100" fill="url(#sun-g)" mask="url(#sun-m)"/>
+  </svg>
+  <div class="glare"></div>
+  <svg class="island" viewBox="0 0 240 70"><path fill="currentColor" d="M0 70 Q 110 30 240 70 Z"/><svg x="70" y="0" width="60" height="62" viewBox="0 0 200 400"><use href="#palm-s"/></svg><svg x="112" y="16" width="40" height="46" viewBox="0 0 200 400"><use href="#palm-s"/></svg></svg>
+  <svg class="palm left" viewBox="0 0 200 400"><use href="#palm-s"/></svg>
+  <svg class="palm right" viewBox="0 0 200 400"><use href="#palm-s"/></svg>
+</div>
+
+<!-- ============ ACCUEIL ============ -->
+<section id="home" class="screen">
+  <div class="wrap">
+    <header class="logo">
+      <div class="mark">
+        <svg width="30" height="30" aria-hidden="true"><use href="#hibiscus-s"/></svg>
+        Jeu de rythme tropical pour fessiers
+      </div>
+      <h1><span class="l1">Twerking</span><span class="l2">Heroes</span></h1>
+      <p>Le téléphone dans la poche arrière, le booty sur le beat. Chaque BOUM de la basse, tu twerkes.</p>
+    </header>
+
+    <div class="modes">
+      <button class="mode main" id="m-host" type="button">
+        <span class="k">Sur la télé du salon</span>
+        <b>Cet appareil est l'écran</b>
+        <span>Ouvre le jeu sur la télé ou sur l'ordi branché dessus. La musique sort de la télé. Jusqu'à 4 joueurs.</span>
+      </button>
+      <button class="mode" id="m-pad" type="button">
+        <span class="k">Manette</span>
+        <b>Ce téléphone rejoint la télé</b>
+        <span>Tape le code affiché sur la télé (ou scanne le QR code), puis glisse le téléphone dans ta poche arrière, écran vers l'extérieur, à l'endroit.</span>
+      </button>
+      <button class="mode" id="m-solo" type="button">
+        <span class="k">Sans télé</span>
+        <b>Jouer seul sur ce téléphone</b>
+        <span>La musique sort du téléphone, qui part lui aussi dans ta poche, écran vers l'extérieur, à l'endroit.</span>
+      </button>
+    </div>
+
+    <label class="toggle" for="g3d">
+      <input type="checkbox" id="g3d" checked>
+      <span><b>Graphismes 3D</b><small>Décoche si le jeu saccade sur la télé ou le téléphone.</small></span>
+    </label>
+
+    <section class="panel" aria-labelledby="how-t">
+      <h2 id="how-t">Jouer sur la télé</h2>
+      <ol class="steps">
+        <li><div><b>Sur la télé</b> <span>ouvre cette page et choisis « Cet appareil est l'écran ». Un code et un QR code s'affichent.</span></div></li>
+        <li><div><b>Sur chaque téléphone</b> <span>scanne le QR code ou ouvre la page, choisis « Manette » et tape le code.</span></div></li>
+        <li><div><b>Lance la partie</b> <span>depuis la télé ou depuis n'importe quel téléphone, puis glisse ton téléphone dans ta poche arrière, <b>écran vers l'extérieur et à l'endroit</b> (le haut du téléphone vers le haut).</span></div></li>
+        <li><div><b>Écoute et bouge</b> <span>sur chaque son. Les scores s'affichent sur la télé.</span></div></li>
+      </ol>
+      <ul class="legend" aria-label="Les sons et les mouvements">
+        <li><b>BOUM</b><span>la basse : twerk</span></li>
+        <li><b>Tom grave</b><span>à gauche : hanche à gauche</span></li>
+        <li><b>Tchak aigu</b><span>à droite : hanche à droite</span></li>
+      </ul>
+    </section>
+  </div>
+</section>
+
+<!-- ============ SOLO ============ -->
+<section id="solo" class="screen" hidden>
+  <div class="wrap">
+    <button class="btn ghost small back" type="button" data-home>← Menu</button>
+    <h2 class="screen-title">Solo sur ce téléphone</h2>
+    <section class="panel" aria-labelledby="tracks-t">
+      <h2 id="tracks-t">Choisis ton son</h2>
+      <div class="tracks" id="solo-tracks" role="radiogroup" aria-labelledby="tracks-t"></div>
+      <label class="check" for="lr-solo"><input type="checkbox" id="lr-solo" data-lr> <span>Mouvements gauche / droite <small>Décoche pour ne garder que les BOUM (mode débutant).</small></span></label>
+    </section>
+    <div id="solo-sensor-slot">
+<!-- Panneau capteur (déplacé entre l'écran solo et la manette) -->
+<section class="panel" id="sensor" aria-labelledby="sensor-t">
+  <h2 id="sensor-t">Capteur &amp; réglages</h2>
+  <div class="meter" aria-hidden="true"><div class="fill" id="meter-fill"></div><div class="th"></div></div>
+  <div class="sensor-row">
+    <div class="sensor-status" id="sensor-status">Bouge le téléphone d'un coup sec : la barre doit passer le trait jaune.</div>
+    <div class="twerk-count" id="twerk-count" aria-live="polite">0 twerk</div>
+  </div>
+  <div class="side-row">
+    <span class="side-chip" id="last-side" data-side="" aria-live="polite">—</span>
+    <span class="msg" id="orient">Tiens le téléphone face à toi, à l'endroit, et donne un coup sec vers la droite : « DROITE » doit s'afficher.</span>
+  </div>
+  <label class="check" for="flip"><input type="checkbox" id="flip"> <span>Inverser gauche et droite <small>si le jeu se trompe de côté à chaque fois</small></span></label>
+  <button class="btn small" id="enable-sensor" type="button" hidden>Activer le capteur de mouvement</button>
+  <div class="field">
+    <div class="row"><label for="sens">Sensibilité</label><output id="sens-out" for="sens">Normale</output></div>
+    <input type="range" id="sens" min="1" max="10" step="1" value="6">
+    <small>Plus c'est sensible, plus un petit mouvement compte comme un twerk.</small>
+  </div>
+  <div class="field">
+    <div class="row"><label for="lat">Compensation du retard</label><output id="lat-out" for="lat">+30 ms</output></div>
+    <input type="range" id="lat" min="-150" max="400" step="5" value="30">
+    <small>Si tes twerks sont toujours notés « en retard », augmente cette valeur.</small>
+  </div>
+</section>
+    </div>
+    <button class="btn ghost" id="solo-calib" type="button">Calibrer (téléphone dans la poche)</button>
+    <button class="btn go" id="solo-start" type="button">C'est parti</button>
+    <p class="notes">
+      <span>BOUM (basse) = twerk · tom grave à gauche = hanche à gauche · tchak aigu à droite = hanche à droite.</span>
+      <span>Sur iPhone, coupe le mode silencieux, sinon pas de musique.</span>
+      <span>L'écran reste allumé pendant la partie quand le téléphone le permet.</span>
+    </p>
+  </div>
+</section>
+
+
+
+<!-- ============ SALON (TÉLÉ) ============ -->
+<section id="lobby" class="screen" hidden>
+  <div class="lobby">
+    <div class="join-card">
+      <div class="logo-s"><span class="l1">Twerking</span> <span class="l2">Heroes</span></div>
+      <div class="qr" id="qr"><div class="ph">Préparation du salon…</div></div>
+      <div class="code-lbl">Code du salon</div>
+      <div class="code" id="room-code">····</div>
+      <div class="url" id="join-url"></div>
+      <p class="msg" id="lobby-status">Connexion au serveur…</p>
+    </div>
+    <div class="lobby-side">
+      <div class="h2">Joueurs</div>
+      <div class="slots" id="slots"></div>
+      <div class="h2" id="lobby-tracks-t">Morceau</div>
+      <div class="tracks" id="lobby-tracks" role="radiogroup" aria-labelledby="lobby-tracks-t"></div>
+      <label class="check" for="lr-host"><input type="checkbox" id="lr-host" data-lr> <span>Mouvements gauche / droite <small>Décoche pour ne garder que les BOUM (mode débutant).</small></span></label>
+      <button class="btn go" id="host-start" type="button" disabled>Lancer la partie</button>
+      <button class="btn ghost" id="host-calib" type="button" disabled>Calibrer les téléphones</button>
+      <button class="btn ghost small back" id="host-leave" type="button">Fermer le salon</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CALIBRATION ============ -->
+<section id="calib" class="screen" hidden>
+  <div class="wrap wide">
+    <h2 class="screen-title">Calibration</h2>
+    <section class="panel calib-now" aria-live="polite">
+      <ol class="calib-steps" id="calib-steps">
+        <li>Force</li><li>Gauche</li><li>Droite</li><li>Rythme</li>
+      </ol>
+      <div class="calib-step" id="calib-step">Préparation</div>
+      <div class="calib-row"><span class="calib-dot" id="calib-dot" aria-hidden="true"></span><span class="calib-big" id="calib-big">8</span></div>
+      <p class="msg" id="calib-help">Téléphone dans la poche arrière, écran vers l’extérieur, à l’endroit.</p>
+    </section>
+    <div class="podium" id="calib-parts"></div>
+    <div class="actions">
+      <button class="btn go" id="calib-again" type="button">Recommencer</button>
+      <button class="btn ghost" id="calib-done" type="button">Terminé</button>
+    </div>
+    <section class="panel" id="vis-panel" aria-labelledby="vis-t">
+      <h2 id="vis-t">Image et son de la télé</h2>
+      <p class="msg">Certaines télés affichent l’image un peu après le son. Lance le test : la pastille ronde doit s’allumer pile sur chaque bip. Sinon, bouge le curseur.</p>
+      <div class="field">
+        <div class="row"><label for="vis">Retard de l’image</label><output id="vis-out" for="vis">0 ms</output></div>
+        <input type="range" id="vis" min="-100" max="300" step="10" value="0">
+      </div>
+      <button class="btn small" id="vis-test" type="button">Tester : 8 bips</button>
+    </section>
+  </div>
+</section>
+
+<!-- ============ REJOINDRE ============ -->
+<section id="join" class="screen" hidden>
+  <div class="wrap">
+    <button class="btn ghost small back" type="button" data-home>← Menu</button>
+    <h2 class="screen-title">Rejoindre la télé</h2>
+    <form class="panel" id="join-form" novalidate>
+      <div class="field">
+        <label for="join-code">Code affiché sur la télé</label>
+        <input class="text-in code" id="join-code" inputmode="numeric" autocomplete="off" maxlength="4" pattern="[0-9]{4}" placeholder="0000">
+      </div>
+      <div class="field">
+        <label for="join-name">Ton nom</label>
+        <input class="text-in" id="join-name" maxlength="12" autocomplete="nickname" placeholder="Léa">
+      </div>
+      <button class="btn go" id="join-btn" type="submit">Rejoindre</button>
+      <p class="msg" id="join-status" aria-live="polite"></p>
+    </form>
+  </div>
+</section>
+
+<!-- ============ MANETTE ============ -->
+<section id="pad" class="screen" hidden>
+  <div class="wrap">
+    <div class="pad-head"><span class="dot" id="pad-dot"></span><b id="pad-name">Joueur</b><span class="st" id="pad-conn">Connecté à la télé</span></div>
+
+    <div id="pad-lobby" class="wrap" style="padding:0">
+      <div id="pad-sensor-slot"></div>
+      <section class="panel" aria-labelledby="pad-tracks-t">
+        <h2 id="pad-tracks-t">Morceau</h2>
+        <div class="tracks" id="pad-tracks"></div>
+        <p class="msg" id="pad-lr"></p>
+      </section>
+      <button class="btn go" id="pad-start" type="button">Lancer la partie</button>
+      <button class="btn ghost small back" id="pad-leave" type="button">Quitter le salon</button>
+    </div>
+
+    <div id="pad-pocket" class="pad-big" hidden>
+      <div class="num" id="pad-count"></div>
+      <div class="huge" id="pad-huge">Dans la poche !</div>
+      <p class="msg" id="pad-sub">Glisse le téléphone dans ta poche arrière, écran vers l'extérieur, à l'endroit.</p>
+      <div class="pad-taps" id="pad-taps" hidden>
+        <button class="btn go" type="button" data-side="L" aria-label="Hanche à gauche">←</button>
+        <button class="btn go" type="button" data-side="C" aria-label="Twerk">●</button>
+        <button class="btn go" type="button" data-side="R" aria-label="Hanche à droite">→</button>
+      </div>
+    </div>
+
+    <div id="pad-result" class="pad-big" hidden>
+      <div class="code-lbl" id="pad-place"></div>
+      <div class="num" id="pad-rank"></div>
+      <div class="huge" id="pad-title" style="font-size:1.6rem"></div>
+      <div class="score-big" id="pad-score"></div>
+      <button class="btn go" id="pad-again" type="button">Encore une !</button>
+    </div>
+
+    <div id="pad-lost" class="pad-big" hidden>
+      <div class="huge" style="font-size:2rem">Connexion perdue</div>
+      <p class="msg" id="pad-lost-msg">La télé ne répond plus.</p>
+      <button class="btn go" id="pad-reconnect" type="button">Reconnecter</button>
+      <button class="btn ghost small" type="button" data-home>Menu</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ POCHE (compte à rebours) ============ -->
+<section id="pocket" class="screen" hidden>
+  <div class="inner">
+    <svg class="pocket-ill" viewBox="0 0 120 110" aria-hidden="true">
+      <path d="M8 8 H112 V70 L60 102 L8 70 Z" fill="#3d5aa8"/>
+      <path d="M16 16 H104 V66 L60 93 L16 66 Z" fill="none" stroke="#ffd447" stroke-width="2.5" stroke-dasharray="6 5"/>
+      <rect x="38" y="0" width="44" height="34" rx="6" fill="#fff0e4"/>
+      <rect x="44" y="5" width="32" height="22" rx="3" fill="#1d0816"/>
+    </svg>
+    <div id="count" aria-live="assertive">8</div>
+    <h2 id="pocket-title">Glisse ton téléphone dans ta poche arrière</h2>
+    <p id="pocket-sub">Écran vers l'extérieur, à l'endroit. La musique démarre toute seule.</p>
+    <button class="btn ghost small" id="cancel" type="button">Annuler</button>
+  </div>
+</section>
+
+<!-- ============ PARTIE ============ -->
+<section id="play" hidden>
+  <canvas id="stage3d" aria-hidden="true" hidden></canvas>
+  <canvas id="stage" aria-label="Piste de jeu : les fesses descendent vers la poche, twerke quand elles y arrivent"></canvas>
+  <button id="quit" type="button">Maintiens pour quitter</button>
+</section>
+
+<!-- ============ RÉSULTATS ============ -->
+<section id="results" class="screen" hidden>
+  <div class="wrap wide">
+    <h2 class="screen-title" id="res-h">Résultats</h2>
+    <p class="msg" id="res-sub"></p>
+    <div class="podium" id="podium"></div>
+    <p class="msg" id="r-best"></p>
+    <div class="actions">
+      <button class="btn go" id="again" type="button">Rejouer</button>
+      <button class="btn ghost" id="menu" type="button">Menu</button>
+    </div>
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script>
+(() => {
+  'use strict';
+  const $ = (s) => document.querySelector(s);
+
+  // ---------- Stockage local (facultatif) ----------
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem('twerking-heroes:' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem('twerking-heroes:' + k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
+  };
+
+  // ---------- Morceaux ----------
+  // Chaque motif = une mesure en doubles-croches (16 pas). "x" = un BOUM de 808 = un twerk attendu.
+  // Chaque motif = une mesure en doubles-croches (16 pas).
+  // x = BOUM de basse (twerk), g = tom grave (hanche à gauche), d = tchak aigu (hanche à droite).
+  // ['F', n] = n mesures de Frénésie : on bouge le plus possible, chaque mouvement rapporte des points.
+  const TRACKS = [
+    { id: 'echauffement', name: 'Échauffement', tag: 'Pour trouver le groove', bpm: 92, level: 1, hat16: false,
+      sections: [['x.......x.......', 4], ['x...x...x...x...', 4], ['g.......d.......', 4], ['F', 2], ['x...x...g...d...', 4], ['g...d...g...d...', 4], ['x...x...x.x.x...', 4]] },
+    { id: 'booty-bounce', name: 'Booty Bounce', tag: 'Les doubles arrivent', bpm: 104, level: 2, hat16: false,
+      sections: [['x...x...x...x...', 4], ['g...d...g...d...', 4], ['x...x.x.g...d...', 4], ['F', 2], ['g.g.d...g.g.d...', 4], ['x.x.x.x.g...d...', 4], ['g...d...x.x.x.x.', 4], ['F', 2], ['x...x...x...x...', 4]] },
+    { id: 'bounce-infernal', name: 'Bounce Infernal', tag: 'Syncopes et rafales', bpm: 126, level: 3, hat16: true,
+      sections: [['x...x...x...x...', 4], ['g...d...g...d...', 4], ['x.x.x.x.x.x.x.x.', 4], ['g..d..g.x..x..x.', 4], ['F', 2], ['g.g.d.d.g.g.d.d.', 4], ['x..x..x.g.d.g.d.', 4], ['x.x.x.x.x.x.x.x.', 4], ['F', 2], ['g...d...x...x...', 4]] }
+  ];
+  const INTRO = 2; // mesures de décompte avant la première note
+  const PROG = [[57, 60, 64], [53, 57, 60], [48, 52, 55], [55, 59, 62]]; // La m, Fa, Do, Sol
+  const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+  const fmt = (n) => Math.round(n).toLocaleString('fr-FR');
+  const barsOf = (tr) => tr.sections.reduce((a, s) => a + s[1], 0);
+  const durOf = (tr) => { const s = Math.round((INTRO + barsOf(tr) + 1) * 4 * 60 / tr.bpm); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+  const trackById = (id) => TRACKS.find((t) => t.id === id) || TRACKS[1];
+  const css = getComputedStyle(document.documentElement);
+  const tok = (n) => css.getPropertyValue(n).trim();
+  const COLORS = [tok('--p1'), tok('--p2'), tok('--p3'), tok('--p4')];
+  const MAX_PLAYERS = 4;
+  const PREFIX = 'twerking-heroes-salon-';
+
+  // ---------- Réglages ----------
+  const settings = { track: store.get('track', 'booty-bounce'), sens: store.get('sens', 6), lat: store.get('lat', 30), g3d: store.get('g3d', true), lr: store.get('lr', true), flip: store.get('flip', false), vis: store.get('vis', 0) };
+  const threshold = () => (motion.calTh || 26 - settings.sens * 2.2); // m/s², de 23.8 (dur) à 4 (très sensible)
+  const SENS_LABELS = ['Très dure', 'Très dure', 'Dure', 'Dure', 'Normale', 'Normale', 'Normale', 'Sensible', 'Sensible', 'Très sensible'];
+  let role = 'none'; // 'solo' | 'host' | 'pad'
+
+  // ---------- Navigation ----------
+  const SCREENS = ['home', 'solo', 'lobby', 'calib', 'join', 'pad', 'pocket', 'play', 'results'];
+  function show(id) {
+    for (const s of SCREENS) $('#' + s).hidden = s !== id;
+    if (id === 'solo' || id === 'pad') requestAnimationFrame(meterLoop);
+    if (id === 'lobby') requestAnimationFrame(lobbyLoop);
+    if (id === 'calib') requestAnimationFrame(calibLoop);
+    window.scrollTo(0, 0);
+  }
+  function mountSensor(slotSel) { $(slotSel).appendChild($('#sensor')); }
+
+  function renderTracks(box, selected, onPick, withBest) {
+    box.textContent = '';
+    for (const tr of TRACKS) {
+      const best = withBest ? store.get('best:' + tr.id, 0) : 0;
+      const d = document.createElement('div');
+      d.className = 'track';
+      const id = box.id + '-' + tr.id;
+      d.innerHTML =
+        '<input type="radio" name="' + box.id + '" id="' + id + '">' +
+        '<label for="' + id + '"><span class="name"></span>' +
+        '<span class="level" aria-label="Difficulté ' + tr.level + ' sur 3">' + [1, 2, 3].map((i) => '<i class="' + (i <= tr.level ? 'on' : '') + '"></i>').join('') + '</span>' +
+        '<span class="meta"></span>' + (best ? '<span class="best"></span>' : '') + '</label>';
+      d.querySelector('.name').textContent = tr.name;
+      d.querySelector('.meta').textContent = tr.bpm + ' BPM · ' + durOf(tr) + ' · ' + tr.tag;
+      if (best) d.querySelector('.best').textContent = 'Record : ' + fmt(best);
+      const inp = d.querySelector('input');
+      inp.checked = tr.id === selected;
+      inp.addEventListener('change', () => onPick(tr.id));
+      box.appendChild(d);
+    }
+  }
+
+  const sens = $('#sens'), lat = $('#lat');
+  function syncSettings() {
+    sens.value = settings.sens; lat.value = settings.lat;
+    $('#sens-out').textContent = SENS_LABELS[settings.sens - 1];
+    $('#lat-out').textContent = (settings.lat > 0 ? '+' : '') + settings.lat + ' ms';
+  }
+  sens.addEventListener('input', () => { settings.sens = +sens.value; store.set('sens', settings.sens); syncSettings(); });
+  lat.addEventListener('input', () => { settings.lat = +lat.value; store.set('lat', settings.lat); syncSettings(); if (role === 'pad') padSend({ type: 'lat', v: settings.lat }); });
+
+  // ---------- Capteur de mouvement ----------
+  const motion = { seen: false, listening: false, mag: 0, peak: 0, armed: true, last: 0, gx: 0, gy: 0, gz: 0, testCount: 0 };
+  const REFRACT = 170; // ms minimum entre deux twerks
+  const needsPermission = typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function';
+
+  function onMotion(e) {
+    const g = e.accelerationIncludingGravity, a = e.acceleration;
+    let x, y, z, hx = null;
+    if (g && g.x != null && g.y != null && g.z != null) {
+      // gravité estimée (filtre passe-bas) : on la retire, et elle dit si le téléphone est à l'endroit
+      motion.gx = motion.gx * 0.85 + g.x * 0.15; motion.gy = motion.gy * 0.85 + g.y * 0.15; motion.gz = motion.gz * 0.85 + g.z * 0.15;
+      hx = g.x - motion.gx;
+    }
+    if (a && a.x != null && a.y != null && a.z != null) { x = a.x; y = a.y; z = a.z; }
+    else if (hx != null) { x = hx; y = g.y - motion.gy; z = g.z - motion.gz; }
+    else return;
+    motion.seen = true;
+    const m = Math.hypot(x, y, z);
+    motion.mag = m;
+    if (m > motion.peak) motion.peak = m;
+    const now = performance.now();
+    const th = threshold();
+    if (motion.cap) {
+      if (now - motion.cap.t >= 150) { const c = motion.cap; motion.cap = null; onPeak(c); }
+      else motion.cap.max = Math.max(motion.cap.max, m);
+    }
+    if (motion.armed && m > th && now - motion.last > REFRACT) {
+      motion.armed = false; motion.last = now;
+      if (motion.cap) { const c = motion.cap; motion.cap = null; onPeak(c); }
+      const raw = rawSideOf(hx != null ? hx : x, y, z), side = flipSide(raw);
+      motion.lastSide = side;
+      motion.cap = { t: now, max: m, raw, audio: ctx ? songNow() : 0 };
+      onTwerk('motion', now, side);
+    } else if (!motion.armed && (m < th * 0.55 || (now - motion.last > 320 && m < th * 0.8))) {
+      motion.armed = true;
+    }
+  }
+
+  // Téléphone dans la poche arrière, écran vers l'extérieur, à l'endroit :
+  // son axe x pointe alors vers la droite du joueur. Le signe de la gravité sur y
+  // corrige un téléphone rangé à l'envers et la convention inversée des iPhone.
+  function rawSideOf(lx, ly, lz) {
+    const lat = Math.abs(lx);
+    if (lat < Math.hypot(ly, lz) * 1.1 || lat < threshold() * 0.6) return 'C';
+    return lx * (motion.gy >= 0 ? 1 : -1) > 0 ? 'R' : 'L';
+  }
+  // la case « Inverser » (réglée à la main ou par la calibration) échange gauche et droite
+  const flipSide = (s) => (settings.flip && s !== 'C' ? (s === 'L' ? 'R' : 'L') : s);
+
+  // Fin d'un mouvement (150 ms après son début) : sa force maximale sert à la calibration
+  function onPeak(c) {
+    if (role === 'pad' && P.phase === 'calib') padSend({ type: 'pk', ts: c.t, mag: c.max, raw: c.raw });
+    else if (role === 'solo' && CAL.active) calibPeak(CAL.parts[0], { mag: c.max, raw: c.raw, t: c.audio });
+  }
+  const SIDE_TXT = { L: '← GAUCHE', R: 'DROITE →', C: 'TWERK' };
+
+  function enableMotion() {
+    // À appeler directement depuis un geste (obligatoire sur iPhone)
+    if (typeof DeviceMotionEvent === 'undefined') return Promise.resolve(false);
+    const listen = () => { if (!motion.listening) { window.addEventListener('devicemotion', onMotion); motion.listening = true; } return true; };
+    if (needsPermission) return DeviceMotionEvent.requestPermission().then((r) => (r === 'granted' ? listen() : false)).catch(() => false);
+    return Promise.resolve(listen());
+  }
+  const waitFor = (fn, ms) => new Promise((res) => { const t0 = performance.now(); (function check() { if (fn()) res(true); else if (performance.now() - t0 > ms) res(false); else setTimeout(check, 50); })(); });
+
+  function testFlash(side) {
+    motion.testCount++;
+    const sd = $('#last-side');
+    sd.textContent = SIDE_TXT[side || 'C'];
+    sd.dataset.side = side || 'C';
+    sd.classList.remove('flash'); void sd.offsetWidth; sd.classList.add('flash');
+    const el = $('#twerk-count');
+    el.textContent = motion.testCount + (motion.testCount > 1 ? ' twerks' : ' twerk');
+    el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+    if (ctx && role === 'solo') sfx('good');
+  }
+
+  // Tous les twerks (capteur, doigt, clavier) passent par ici
+  function onTwerk(src, at, side) {
+    side = side || 'C';
+    if (role === 'pad') { padTwerk(src, at, side); return; }
+    if (role === 'solo' && G.running) {
+      if (G.input === 'motion' && src === 'tap') return; // le tissu de la poche ne doit pas jouer à ta place
+      registerTwerk(G.players[0], songNow() - settings.lat / 1000, side);
+      return;
+    }
+    if (src === 'motion' && !$('#solo').hidden) testFlash(side);
+  }
+
+  function meterLoop() {
+    const host = $('#sensor').closest('section.screen');
+    if (!host || host.hidden) return;
+    requestAnimationFrame(meterLoop);
+    motion.peak *= 0.9;
+    const v = Math.max(motion.mag, motion.peak);
+    $('#meter-fill').style.width = Math.min(100, (v / (threshold() * 1.5)) * 100) + '%';
+    if (motion.seen) {
+      const up = Math.abs(motion.gy) > 5;
+      const txt = up ? 'Téléphone debout : gauche et droite reconnues.' : 'Mets le téléphone debout (le haut vers le haut) pour reconnaître gauche et droite.';
+      if ($('#orient').textContent !== txt) { $('#orient').textContent = txt; $('#orient').classList.toggle('err', !up); }
+    }
+  }
+
+  async function probeSensor() {
+    const status = $('#sensor-status');
+    if (typeof DeviceMotionEvent === 'undefined') { status.textContent = "Pas de capteur de mouvement ici. Tu joueras au doigt : tape l'écran (ou Espace) sur chaque BOUM."; return; }
+    if (needsPermission && !motion.listening) { $('#enable-sensor').hidden = false; return; }
+    await enableMotion();
+    const ok = await waitFor(() => motion.seen, 1500);
+    if (!ok) status.textContent = "Le capteur ne répond pas ici. Tu joueras au doigt : tape l'écran (ou Espace) sur chaque BOUM.";
+  }
+  $('#enable-sensor').addEventListener('click', async () => {
+    const ok = await enableMotion();
+    $('#enable-sensor').hidden = ok;
+    if (!ok) $('#sensor-status').textContent = 'Accès au capteur refusé. Autorise « Mouvement et orientation » dans les réglages du navigateur, ou joue au doigt.';
+  });
+
+  // ---------- Audio ----------
+  let ctx = null, master = null, noiseBuf = null, bus = null;
+  function ensureAudio() {
+    if (!ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      ctx = new AC();
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -14; comp.ratio.value = 4;
+      master = ctx.createGain(); master.gain.value = 0.85;
+      master.connect(comp); comp.connect(ctx.destination);
+      noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 3, ctx.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      bus = master;
+    }
+    if (ctx.state === 'suspended') ctx.resume();
+  }
+  const outLat = () => (ctx && (ctx.outputLatency || ctx.baseLatency)) || 0;
+
+  function env(g, t, a, peak, d) {
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(peak, t + a);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + a + d);
+  }
+  function tone(t, type, f0, f1, glide, peak, dec, out, filt) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f0, t);
+    if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + glide);
+    env(g, t, 0.003, peak, dec);
+    let node = o;
+    if (filt) { const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = filt; o.connect(f); node = f; }
+    node.connect(g).connect(out || bus);
+    o.start(t); o.stop(t + dec + 0.05);
+  }
+  function noiseHit(t, type, freq, peak, dec, q, out) {
+    const s = ctx.createBufferSource(); s.buffer = noiseBuf;
+    const f = ctx.createBiquadFilter(); f.type = type; f.frequency.value = freq; if (q) f.Q.value = q;
+    const g = ctx.createGain(); env(g, t, 0.002, peak, dec);
+    s.connect(f).connect(g).connect(out || bus);
+    s.start(t, Math.random()); s.stop(t + dec + 0.05);
+  }
+  function siren(t, dur) {
+    const o = ctx.createOscillator(), lfo = ctx.createOscillator(), lg = ctx.createGain(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    o.type = 'sawtooth'; o.frequency.value = 620; lfo.frequency.value = 5; lg.gain.value = 140;
+    lfo.connect(lg).connect(o.frequency);
+    f.type = 'lowpass'; f.frequency.value = 1800;
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.03, t + 0.1);
+    g.gain.setValueAtTime(0.03, t + dur - 0.1); g.gain.linearRampToValueAtTime(0.0001, t + dur);
+    o.connect(f).connect(g).connect(bus);
+    o.start(t); lfo.start(t); o.stop(t + dur + 0.05); lfo.stop(t + dur + 0.05);
+  }
+  // corne de brume façon dancehall : « pouin pouin pouiiin »
+  const airhorn = (t) => [0, 0.16, 0.32].forEach((d, i) => { for (const f of [311, 392, 466]) tone(t + d, 'sawtooth', f, f * 0.96, i === 2 ? 0.5 : 0.12, 0.05, i === 2 ? 0.55 : 0.12, null, 2600); });
+  function panned(p) { if (!ctx.createStereoPanner) return bus; const n = ctx.createStereoPanner(); n.pan.value = p; n.connect(bus); return n; }
+  // gauche : tom grave à gauche ; droite : « tchak » aigu à droite
+  const tomL = (t) => { const o = panned(-0.75); tone(t, 'sine', 240, 160, 0.06, 0.95, 0.32, o); tone(t, 'triangle', 330, 0, 0, 0.25, 0.08, o); noiseHit(t, 'bandpass', 1800, 0.2, 0.02, 1, o); };
+  const tchakR = (t) => { const o = panned(0.75); tone(t, 'triangle', 540, 430, 0.03, 0.5, 0.13, o); noiseHit(t, 'bandpass', 3600, 0.55, 0.06, 2, o); };
+  const kick808 = (t, f) => { tone(t, 'sine', f * 4, f, 0.06, 1.0, 0.6); tone(t, 'triangle', f * 2, 0, 0, 0.35, 0.25); noiseHit(t, 'highpass', 3000, 0.25, 0.015); };
+  const clap = (t) => { noiseHit(t, 'bandpass', 1200, 0.35, 0.02, 1.2); noiseHit(t + 0.012, 'bandpass', 1200, 0.35, 0.02, 1.2); noiseHit(t + 0.024, 'bandpass', 1100, 0.45, 0.18, 1.2); };
+  const hat = (t, open, vol) => noiseHit(t, 'highpass', 7500, vol, open ? 0.2 : 0.045);
+  const crash = (t) => noiseHit(t, 'highpass', 4000, 0.3, 1.4);
+  const cowbell = (t, hi, out) => { const k = hi ? 1.5 : 1; tone(t, 'square', 587 * k, 0, 0, 0.12, 0.12, out, 2500); tone(t, 'square', 845 * k, 0, 0, 0.09, 0.1, out, 2500); };
+  function pad(t, ch, dur) {
+    for (const m of ch) for (const det of [-7, 7]) {
+      const o = ctx.createOscillator(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      o.type = 'sawtooth'; o.frequency.value = mtof(m); o.detune.value = det;
+      f.type = 'lowpass'; f.frequency.value = 900;
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.022, t + 0.08);
+      g.gain.setValueAtTime(0.022, t + dur - 0.15); g.gain.linearRampToValueAtTime(0.0001, t + dur);
+      o.connect(f).connect(g).connect(bus); o.start(t); o.stop(t + dur + 0.05);
+    }
+  }
+  const stab = (t, ch, dur) => { for (const m of ch) tone(t, 'sawtooth', mtof(m + 12), 0, 0, 0.045, dur, null, 1800); };
+
+  function sfx(kind, vol) {
+    const t = ctx.currentTime, v = vol || 1;
+    if (kind === 'perfect') { tone(t, 'triangle', 1046, 2093, 0.08, 0.25 * v, 0.18, master); tone(t + 0.05, 'sine', 1568, 0, 0, 0.15 * v, 0.2, master); }
+    else if (kind === 'good') tone(t, 'triangle', 784, 0, 0, 0.2 * v, 0.12, master);
+    else if (kind === 'ok') tone(t, 'square', 523, 0, 0, 0.07 * v, 0.1, master, 2000);
+    else if (kind === 'miss') tone(t, 'sawtooth', 140, 70, 0.2, 0.14 * v, 0.25, master, 600);
+    else if (kind === 'free') noiseHit(t, 'bandpass', 800, 0.08 * v, 0.08, 1, master);
+  }
+
+  // ---------- Voix ----------
+  function say(text) {
+    try {
+      if (!('speechSynthesis' in window)) return;
+      speechSynthesis.cancel();
+      if (!text) return;
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'fr-FR'; u.rate = 1.05;
+      speechSynthesis.speak(u);
+    } catch (e) { /* pas de voix */ }
+  }
+
+  // ---------- Écran allumé ----------
+  let wakeLock = null;
+  async function lockScreen() { try { if (navigator.wakeLock && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); } } catch (e) { wakeLock = null; } }
+  function unlockScreen() { try { if (wakeLock) wakeLock.release(); } catch (e) { /* déjà libéré */ } wakeLock = null; }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && (G.running || G.counting || role === 'host' || (role === 'pad' && P.conn))) lockScreen();
+  });
+
+  // ---------- Moteur de jeu (un ou plusieurs joueurs) ----------
+  const WIN = { perfect: 0.065, good: 0.13, ok: 0.2 };
+  const PTS = { perfect: 300, good: 150, ok: 60, miss: 0 };
+  const LOOK = 1.7; // secondes de notes visibles à l'avance
+  const G = { running: false, counting: false, players: [] };
+  let schedTimer = null, countTimers = [];
+
+  function countdown(secs, title, sub, done) {
+    G.counting = true;
+    show('pocket');
+    $('#pocket-title').textContent = title;
+    $('#pocket-sub').textContent = sub;
+    $('#count').textContent = secs;
+    const t0 = ctx.currentTime + 0.05;
+    for (let i = 0; i < secs; i++) {
+      cowbell(t0 + i, secs - i <= 3, master);
+      countTimers.push(setTimeout(() => { $('#count').textContent = secs - i; }, i * 1000));
+    }
+    countTimers.push(setTimeout(() => { G.counting = false; done(); }, secs * 1000));
+  }
+  function clearCountdown() { countTimers.forEach(clearTimeout); countTimers = []; G.counting = false; }
+
+  // defs : [{ name, color, onHit?, ref? }]
+  function startSong(tr, defs) {
+    G.track = tr;
+    G.stepDur = 60 / tr.bpm / 4;
+    G.mainBars = barsOf(tr);
+    G.totalSteps = (INTRO + G.mainBars + 1) * 16;
+    G.songStart = ctx.currentTime + 0.2;
+    G.lr = settings.lr; // sans gauche/droite, toutes les notes deviennent des BOUM
+    G.noteSteps = new Map();
+    let bar = 0;
+    G.barKind = []; G.frenzies = [];
+    for (const [pat, n] of tr.sections) {
+      if (pat === 'F') { const t0 = G.songStart + (INTRO + bar) * 16 * G.stepDur; G.frenzies.push({ t0, t1: t0 + n * 16 * G.stepDur, started: false, ended: false }); }
+      for (let i = 0; i < n; i++, bar++) {
+        G.barKind[bar] = pat === 'F' ? 'F' : 'N';
+        if (pat === 'F') continue;
+        for (let p = 0; p < 16; p++) {
+          const c = pat[p];
+          if (c === '.') continue;
+          G.noteSteps.set((INTRO + bar) * 16 + p, !G.lr || c === 'x' ? 'C' : c === 'g' ? 'L' : 'R');
+        }
+      }
+    }
+    G.noteSteps.set((INTRO + G.mainBars) * 16, 'C'); // BOUM final
+    const chart = [...G.noteSteps.keys()].sort((a, b) => a - b).map((s) => ({ t: G.songStart + s * G.stepDur, d: G.noteSteps.get(s) }));
+    G.players = defs.map((d) => Object.assign({
+      score: 0, combo: 0, maxCombo: 0, missStreak: 0,
+      counts: { perfect: 0, good: 0, ok: 0, miss: 0 },
+      idx: 0, notes: chart.map((c) => ({ t: c.t, d: c.d, judged: null })),
+      squash: 0, popups: [], parts: [], cx: 0, hitY: 0, fz: 0, fzTotal: 0, fzPts: 0
+    }, d));
+    // délai de grâce avant de compter un raté : le réseau peut retarder un twerk venu d'un téléphone
+    G.grace = role === 'host' ? 0.35 : Math.max(0, settings.lat / 1000) + 0.02;
+    G.nextStep = 0; G.quitStart = 0;
+    bus = ctx.createGain(); bus.connect(master);
+    G.running = true;
+    G.use3d = settings.g3d && init3D();
+    $('#stage3d').hidden = !G.use3d;
+    if (G.use3d) setupLanes3D(G.players);
+    show('play');
+    resize();
+    schedTimer = setInterval(schedule, 25);
+    schedule();
+    requestAnimationFrame(frame);
+  }
+
+  function schedule() {
+    while (G.nextStep < G.totalSteps && G.songStart + G.nextStep * G.stepDur < ctx.currentTime + 0.15) {
+      playStep(G.nextStep, G.songStart + G.nextStep * G.stepDur);
+      G.nextStep++;
+    }
+    if (G.nextStep >= G.totalSteps && ctx.currentTime > G.songStart + G.totalSteps * G.stepDur + G.grace + 0.3) finish();
+  }
+
+  function playStep(s, t) {
+    const bar = Math.floor(s / 16), pos = s % 16, tr = G.track;
+    if (bar < INTRO) {
+      if (pos % 4 === 0) cowbell(t, pos === 0);
+      if (pos % 2 === 0) hat(t, false, 0.22);
+      if (bar === INTRO - 1 && (pos === 4 || pos === 12)) clap(t);
+      return;
+    }
+    const mb = bar - INTRO;
+    if (mb >= G.mainBars) {
+      if (pos === 0) { kick808(t, mtof(PROG[0][0] - 12)); crash(t); pad(t, PROG[0], G.stepDur * 16); }
+      return;
+    }
+    const ch = PROG[mb % 4];
+    if (G.barKind[mb] === 'F') { // Frénésie : corne de brume, sirène, grosse caisse à chaque temps
+      if (pos === 0) { pad(t, ch, G.stepDur * 16 * 0.98); siren(t, G.stepDur * 16); if (G.barKind[mb - 1] !== 'F') airhorn(t); }
+      if (pos % 4 === 0) kick808(t, mtof(ch[0] - 12));
+      if (pos === 4 || pos === 12 || pos === 14) clap(t);
+      hat(t, pos % 4 === 2, pos % 2 ? 0.12 : 0.24);
+      return;
+    }
+    if (pos === 0) pad(t, ch, G.stepDur * 16 * 0.98);
+    if (pos === 6 || pos === 10 || pos === 14) stab(t, ch, G.stepDur * 1.5);
+    if (pos === 4 || pos === 12) clap(t);
+    if (pos % 2 === 0) hat(t, pos % 4 === 2, pos % 4 === 2 ? 0.16 : 0.26);
+    else if (tr.hat16) hat(t, false, 0.1);
+    const nt = G.noteSteps.get(s);
+    if (nt === 'C') kick808(t, mtof(ch[0] - 12));
+    else if (nt === 'L') tomL(t);
+    else if (nt === 'R') tchakR(t);
+  }
+
+  // Temps "entendu" : horloge audio moins la latence de sortie
+  const songNow = () => ctx.currentTime - outLat();
+
+  const FRENZY_PTS = 40;
+  function registerTwerk(pl, t, side) {
+    if (!G.running || !pl) return;
+    const fz = G.frenzies.find((f) => t >= f.t0 - 0.05 && t <= f.t1 + 0.1);
+    if (fz) { // Frénésie : chaque mouvement compte
+      pl.squash = 1; pl.fz++; pl.fzTotal++; pl.fzPts += FRENZY_PTS; pl.score += FRENZY_PTS;
+      if (G.players.length === 1) tone(ctx.currentTime, 'triangle', 700 + Math.min(pl.fz, 40) * 25, 0, 0, 0.12, 0.06, master);
+      burst(pl, 4, PETALS[pl.fz % PETALS.length]);
+      return;
+    }
+    pl.squash = 1;
+    let best = null, bd = Infinity;
+    for (let i = pl.idx; i < pl.notes.length; i++) {
+      const n = pl.notes[i];
+      if (n.t - t > WIN.ok) break;
+      if (n.judged) continue;
+      const d = Math.abs(n.t - t);
+      if (d < bd) { bd = d; best = n; }
+    }
+    if (!best || bd > WIN.ok) { if (G.players.length === 1) sfx('free'); return; }
+    // une note gauche ou droite faite du mauvais côté (ou au centre) ne vaut que « Limite »
+    const wrong = G.lr && best.d !== 'C' && side !== best.d;
+    judge(pl, best, wrong ? 'ok' : bd <= WIN.perfect ? 'perfect' : bd <= WIN.good ? 'good' : 'ok', best.t - t, wrong);
+  }
+
+  const MILESTONES = { 10: 'dix d’affilée !', 25: 'ça chauffe !', 50: 'légende du booty !', 100: 'inarrêtable !' };
+  function judge(pl, n, kind, early, wrong) {
+    n.judged = kind;
+    pl.counts[kind]++;
+    const multi = G.players.length > 1;
+    if (kind === 'miss') {
+      pl.combo = 0; pl.missStreak++;
+      if (pl.missStreak === 5) say(multi ? pl.name + ', on bouge !' : 'Allez, on bouge !');
+    } else {
+      pl.combo++; pl.missStreak = 0;
+      pl.maxCombo = Math.max(pl.maxCombo, pl.combo);
+      const m = MILESTONES[pl.combo];
+      if (m) say(multi ? pl.name + ', ' + m : m.charAt(0).toUpperCase() + m.slice(1));
+    }
+    pl.score += PTS[kind] * Math.min(4, 1 + Math.floor(pl.combo / 10));
+    sfx(kind, multi ? 0.6 : 1);
+    const label = wrong ? 'MAUVAIS CÔTÉ' : { perfect: 'PARFAIT', good: 'BIEN', ok: early > 0 ? 'EN AVANCE' : 'EN RETARD', miss: 'RATÉ' }[kind];
+    pl.popups.push({ text: label, kind, born: performance.now() });
+    if (pl.popups.length > 3) pl.popups.shift();
+    if (kind === 'perfect' || kind === 'good') burst(pl, kind === 'perfect' ? 18 : 8, kind === 'perfect' ? 'petals' : pl.color);
+    if (pl.onHit) pl.onHit(kind);
+    while (pl.idx < pl.notes.length && pl.notes[pl.idx].judged) pl.idx++;
+  }
+
+  const RANK_TITLES = { S: 'Légende du booty', A: 'Twerk d’élite', B: 'Ça remue bien', C: 'Échauffement en cours', D: 'Le booty dort encore' };
+  function rate(pl) {
+    const c = pl.counts, total = pl.notes.length;
+    const acc = total ? (c.perfect + c.good * 0.7 + c.ok * 0.4) / total : 0;
+    const rank = acc >= 0.9 ? 'S' : acc >= 0.78 ? 'A' : acc >= 0.62 ? 'B' : acc >= 0.45 ? 'C' : 'D';
+    return { acc, rank, title: RANK_TITLES[rank] };
+  }
+  const placeText = (i) => (i === 0 ? '1er' : (i + 1) + 'e');
+
+  function finish() {
+    if (!G.running) return;
+    stopGame();
+    const ranked = G.players.map((pl) => Object.assign(pl, rate(pl))).sort((a, b) => b.score - a.score);
+    const multi = ranked.length > 1;
+    $('#res-h').textContent = multi ? 'Victoire de ' + ranked[0].name + ' !' : 'Résultats';
+    $('#res-sub').textContent = G.track.name + ' · ' + G.track.bpm + ' BPM' + (role === 'solo' && G.input === 'tap' ? ' · mode doigt' : '');
+    const box = $('#podium');
+    box.textContent = '';
+    ranked.forEach((pl, i) => {
+      const card = document.createElement('article');
+      card.className = 'panel card';
+      card.style.setProperty('--pc', pl.color);
+      card.innerHTML =
+        '<div class="top"><div class="rank"></div><div class="who">' + (multi ? '<div class="place"></div>' : '') + '<b></b><span></span></div></div>' +
+        '<div class="score-big"></div>' +
+        '<dl class="stats">' +
+        '<div><dt>Parfait</dt><dd data-k="perfect"></dd></div><div><dt>Bien</dt><dd data-k="good"></dd></div>' +
+        '<div><dt>Limite</dt><dd data-k="ok"></dd></div><div><dt>Raté</dt><dd data-k="miss"></dd></div>' +
+        '<div><dt>Combo max</dt><dd data-k="combo"></dd></div><div><dt>Précision</dt><dd data-k="acc"></dd></div>' +
+        '<div><dt>Frénésie</dt><dd data-k="fz"></dd></div><div><dt>Bonus frénésie</dt><dd data-k="fzp"></dd></div></dl>';
+      card.querySelector('.rank').textContent = pl.rank;
+      if (multi) card.querySelector('.place').textContent = placeText(i) + (pl.gone ? ' · déconnecté' : '');
+      card.querySelector('.who b').textContent = multi ? pl.name : pl.title;
+      card.querySelector('.who span').textContent = multi ? pl.title : 'Rang ' + pl.rank;
+      card.querySelector('.score-big').textContent = fmt(pl.score);
+      for (const k of ['perfect', 'good', 'ok', 'miss']) card.querySelector('[data-k="' + k + '"]').textContent = pl.counts[k];
+      card.querySelector('[data-k="combo"]').textContent = pl.maxCombo;
+      card.querySelector('[data-k="acc"]').textContent = Math.round(pl.acc * 100) + ' %';
+      card.querySelector('[data-k="fz"]').textContent = pl.fzTotal + ' mouv.';
+      card.querySelector('[data-k="fzp"]').textContent = fmt(pl.fzPts);
+      box.appendChild(card);
+    });
+    const best = $('#r-best');
+    best.textContent = ''; best.classList.remove('record');
+    if (role === 'solo') {
+      const key = 'best:' + G.track.id, prev = store.get(key, 0), sc = ranked[0].score;
+      if (sc > prev) { store.set(key, sc); best.classList.add('record'); best.textContent = prev ? 'Nouveau record ! Ancien : ' + fmt(prev) : 'Premier record posé !'; }
+      else best.textContent = 'Record : ' + fmt(prev);
+      say(G.input === 'motion' ? 'Terminé ! Rang ' + ranked[0].rank + '. Sors ton téléphone pour voir ton score.' : 'Terminé ! Rang ' + ranked[0].rank + '.');
+    } else if (role === 'host') {
+      say(multi ? 'Terminé ! Victoire de ' + ranked[0].name + ', rang ' + ranked[0].rank + ' !' : 'Terminé ! Rang ' + ranked[0].rank + ' !');
+      hostSendResults(ranked);
+    }
+    $('#again').textContent = role === 'host' ? 'Retour au salon' : 'Rejouer';
+    show('results');
+  }
+
+  function stopGame() {
+    G.running = false;
+    clearInterval(schedTimer);
+    clearCountdown();
+    if (role === 'solo') unlockScreen();
+    if (bus && bus !== master) {
+      const b = bus;
+      try { b.gain.setTargetAtTime(0, ctx.currentTime, 0.05); } catch (e) { /* déjà coupé */ }
+      setTimeout(() => b.disconnect(), 400);
+      bus = master;
+    }
+  }
+
+  // ---------- Dessin ----------
+  const cv = $('#stage'), c2 = cv.getContext('2d');
+  const C = { bg: tok('--bg'), fg: tok('--fg'), peach: tok('--peach'), pink: tok('--pink'), gold: tok('--gold'), denim: tok('--denim'), grey: tok('--grey'), muted: tok('--muted') };
+  const FONT_D = tok('--display'), FONT_B = tok('--body');
+  const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let W = 0, H = 0, DPR = 1;
+  function resize() {
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    c2.setTransform(DPR, 0, 0, DPR, 0, 0);
+    if (G.use3d) resize3D(); else buildBackdrop();
+  }
+  window.addEventListener('resize', () => { if (G.running) resize(); });
+
+  // ---------- Décor tropical (partie) ----------
+  const PALM = {
+    trunk: new Path2D('M58 400 C 62 320 70 230 112 112 L 126 118 C 92 232 86 322 86 400 Z'),
+    fronds: new Path2D('M119 112 C 150 88 190 96 200 150 C 186 124 160 116 121 120 Z M119 112 C 140 70 178 60 196 76 C 170 74 146 88 122 116 Z M119 112 C 118 70 132 40 156 30 C 140 52 132 80 124 114 Z M119 112 C 96 70 60 62 40 74 C 68 76 94 90 116 116 Z M119 112 C 84 92 40 100 26 156 C 44 128 76 116 117 120 Z M119 112 C 96 112 70 140 64 190 C 80 156 98 134 120 118 Z M119 112 C 146 118 166 150 166 196 C 154 160 138 138 120 118 Z'),
+    nuts: (() => { const p = new Path2D(); for (const [x, y, r] of [[112, 122, 7], [127, 124, 7], [119, 133, 6]]) { p.moveTo(x + r, y); p.arc(x, y, r, 0, Math.PI * 2); } return p; })()
+  };
+  const SIL = tok('--sil');
+  const PETALS = [tok('--pink'), tok('--peach'), '#ff7a59', tok('--gold'), tok('--palm')];
+  let backdrop = null, horizon = 0, sunX = 0, sunY = 0, sunR = 0;
+  // Ciel, soleil rayé, île et mer : dessinés une fois par taille d'écran
+  function buildBackdrop() {
+    backdrop = document.createElement('canvas');
+    backdrop.width = cv.width; backdrop.height = cv.height;
+    const b = backdrop.getContext('2d');
+    b.setTransform(DPR, 0, 0, DPR, 0, 0);
+    horizon = H * 0.6;
+    const sky = b.createLinearGradient(0, 0, 0, horizon);
+    sky.addColorStop(0, '#2a0f45'); sky.addColorStop(0.45, '#8e2a6b'); sky.addColorStop(0.78, '#e8565a'); sky.addColorStop(1, '#ffb65c');
+    b.fillStyle = sky; b.fillRect(0, 0, W, horizon);
+    sunR = Math.min(W, H) * 0.2; sunX = W / 2; sunY = horizon - sunR * 0.35;
+    const sg = b.createLinearGradient(0, sunY - sunR, 0, sunY + sunR);
+    sg.addColorStop(0, '#ffe66b'); sg.addColorStop(1, '#ff5f7e');
+    b.fillStyle = sg; b.beginPath(); b.arc(sunX, sunY, sunR, 0, Math.PI * 2); b.fill();
+    b.fillStyle = sky; // rayures : on repeint le ciel par-dessus le soleil
+    for (let i = 0; i < 5; i++) b.fillRect(sunX - sunR, sunY + sunR * (0.08 + i * 0.19), sunR * 2, sunR * (0.04 + i * 0.025));
+    b.fillStyle = SIL;
+    b.beginPath(); b.moveTo(W * 0.03, horizon); b.quadraticCurveTo(W * 0.14, horizon - H * 0.04, W * 0.27, horizon); b.fill();
+    for (const [px, sc] of [[0.13, 0.00019], [0.18, 0.00013]]) {
+      b.save(); b.translate(W * px, horizon - H * 0.02); b.scale(H * sc, H * sc); b.translate(-72, -400); b.fill(PALM.trunk); b.fill(PALM.fronds); b.restore();
+    }
+    const sea = b.createLinearGradient(0, horizon, 0, H);
+    sea.addColorStop(0, '#1f8a96'); sea.addColorStop(0.35, '#145e6e'); sea.addColorStop(1, '#0a2a38');
+    b.fillStyle = sea; b.fillRect(0, horizon, W, H - horizon);
+  }
+  function drawPalm(x, baseY, s, sway, flip) {
+    c2.save();
+    c2.translate(x, baseY); c2.scale(flip ? -s : s, s); c2.rotate(sway * 0.25); c2.translate(-72, -400);
+    c2.fillStyle = SIL;
+    c2.fill(PALM.trunk);
+    c2.translate(119, 112); c2.rotate(sway); c2.translate(-119, -112);
+    c2.fill(PALM.fronds); c2.fill(PALM.nuts);
+    c2.restore();
+  }
+  // fl = intensité du temps fort (1 sur le temps, puis décroît)
+  function drawScene(t, fl) {
+    if (backdrop) c2.drawImage(backdrop, 0, 0, W, H); else { c2.fillStyle = C.bg; c2.fillRect(0, 0, W, H); }
+    if (!reduced) { // halo du soleil qui pulse sur le temps
+      const g = c2.createRadialGradient(sunX, sunY, sunR * 0.8, sunX, sunY, sunR * (1.6 + fl * 0.6));
+      g.addColorStop(0, 'rgba(255,190,90,' + (0.15 + 0.3 * fl) + ')'); g.addColorStop(1, 'rgba(255,190,90,0)');
+      c2.fillStyle = g; c2.fillRect(0, 0, W, horizon);
+    }
+    const rows = 12, depth = H - horizon; // reflets du soleil sur l'eau
+    for (let i = 0; i < rows; i++) {
+      const y = horizon + 4 + (i / rows) * depth * 0.8;
+      const w = sunR * (1.5 - i * 0.09) * (reduced ? 1 : 0.75 + 0.25 * Math.sin(t * 1.7 + i * 1.3));
+      const off = reduced ? 0 : Math.sin(t * 1.1 + i) * sunR * 0.12;
+      c2.fillStyle = 'rgba(255,214,120,' + (0.5 * (1 - i / rows)) + ')';
+      c2.fillRect(sunX - w / 2 + off, y, w, Math.max(2, depth * 0.012));
+    }
+    c2.strokeStyle = 'rgba(255,255,255,0.1)'; c2.lineWidth = 2; // vagues
+    for (let k = 1; k <= 5; k++) {
+      const y = horizon + depth * (k / 6), amp = 2 + k, ph = reduced ? 0 : t * (0.6 + k * 0.15);
+      c2.beginPath();
+      for (let x = 0; x <= W + 16; x += 16) { const yy = y + Math.sin(x * 0.02 + ph + k) * amp; if (x === 0) c2.moveTo(x, yy); else c2.lineTo(x, yy); }
+      c2.stroke();
+    }
+    // palmiers au premier plan : ils dansent sur le temps
+    const sway = reduced ? 0 : Math.sin(t * 0.9) * 0.035 + fl * 0.05;
+    const s = (W < H ? H * 0.5 : H * 0.85) / 400;
+    drawPalm(W * 0.03, H + 4, s, sway, false);
+    drawPalm(W * 0.97, H + 4, s, -sway, true);
+  }
+
+  function burst(pl, n, color) {
+    if (reduced) return;
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, v = 2 + Math.random() * 5;
+      pl.parts.push({ x: pl.cx + (Math.random() - 0.5) * 50, y: pl.hitY, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 2, life: 1, rot: Math.random() * 6, color: color === 'petals' ? PETALS[i % PETALS.length] : color });
+    }
+  }
+
+  function booty(x, y, r, fill, alpha) {
+    c2.globalAlpha = alpha;
+    c2.fillStyle = fill;
+    c2.beginPath();
+    c2.arc(x - r * 0.62, y, r, 0, Math.PI * 2);
+    c2.moveTo(x + r * 1.62, y);
+    c2.arc(x + r * 0.62, y, r, 0, Math.PI * 2);
+    c2.fill();
+    c2.strokeStyle = 'rgba(40,10,30,0.5)';
+    c2.lineWidth = Math.max(1.5, r * 0.12);
+    c2.beginPath(); c2.moveTo(x, y - r * 0.7); c2.quadraticCurveTo(x + r * 0.1, y, x, y + r * 0.62); c2.stroke();
+    c2.globalAlpha = 1;
+  }
+
+  function arrow(x, y, s, dir, color, alpha) {
+    c2.globalAlpha = alpha; c2.fillStyle = color;
+    c2.beginPath(); c2.moveTo(x + dir * s, y); c2.lineTo(x - dir * s * 0.6, y - s); c2.lineTo(x - dir * s * 0.6, y + s); c2.closePath(); c2.fill();
+    c2.globalAlpha = 1;
+  }
+
+  function pocketShape(cx, cy, pw, ph) {
+    c2.beginPath();
+    c2.moveTo(cx - pw / 2, cy - ph * 0.45);
+    c2.lineTo(cx + pw / 2, cy - ph * 0.45);
+    c2.lineTo(cx + pw / 2, cy + ph * 0.25);
+    c2.lineTo(cx, cy + ph * 0.55);
+    c2.lineTo(cx - pw / 2, cy + ph * 0.25);
+    c2.closePath();
+  }
+
+  function frame() {
+    if (!G.running) return;
+    requestAnimationFrame(frame);
+    // anow = temps du son ; now = temps de l'image (réglage image/son de la télé)
+    const anow = songNow(), now = anow + settings.vis / 1000;
+    for (const f of G.frenzies) {
+      if (!f.started && anow >= f.t0 - 0.35) {
+        f.started = true;
+        for (const pl of G.players) pl.fz = 0;
+        say('Frénésie ! Bouge à fond !');
+        if (role === 'host') broadcast({ type: 'frenzy', on: true });
+      }
+      if (f.started && !f.ended && anow > f.t1 + G.grace + 0.1) {
+        f.ended = true;
+        for (const pl of G.players) pl.popups.push({ text: 'FRÉNÉSIE ×' + pl.fz, kind: 'perfect', born: performance.now(), dur: 1600 });
+        const best = [...G.players].sort((a, b) => b.fz - a.fz)[0];
+        if (G.players.length > 1) { if (best.fz) say(best.name + ' gagne la frénésie avec ' + best.fz + ' mouvements !'); }
+        else say(best.fz + ' mouvements !');
+        if (role === 'host') broadcast({ type: 'frenzy', on: false });
+      }
+    }
+    // notes passées sans twerk
+    for (const pl of G.players) {
+      for (let i = pl.idx; i < pl.notes.length; i++) {
+        const n = pl.notes[i];
+        if (n.t + WIN.ok + G.grace > anow) break;
+        if (!n.judged) judge(pl, n, 'miss', 0);
+      }
+    }
+    // "Maintiens pour quitter"
+    if (G.quitStart) {
+      const p = Math.min(1, (performance.now() - G.quitStart) / 900);
+      $('#quit').style.setProperty('--p', (p * 100) + '%');
+      if (p >= 1) { G.quitStart = 0; abortGame(); return; }
+    }
+    if (G.use3d) { frame3D(now); return; }
+
+    const n = G.players.length;
+    const gap = Math.max(14, W * 0.025);
+    const lw = Math.min((W - 32 - gap * (n - 1)) / n, H * 0.42, 340);
+    const x0all = (W - (lw * n + gap * (n - 1))) / 2;
+    const topY = H * 0.26, hitY = H * 0.76;
+    const beat = G.stepDur * 4;
+    const sinceStart = now - G.songStart;
+
+    const fl = sinceStart > 0 ? Math.pow(1 - (sinceStart / beat) % 1, 3) : 0;
+    drawScene(performance.now() / 1000, fl);
+    // progression du morceau
+    const prog = Math.max(0, Math.min(1, sinceStart / (G.totalSteps * G.stepDur)));
+    c2.fillStyle = 'rgba(30,5,40,0.45)'; c2.fillRect(16, 10, W - 32, 5);
+    c2.fillStyle = C.peach; c2.fillRect(16, 10, (W - 32) * prog, 5);
+
+    const tnow = performance.now();
+    G.players.forEach((pl, i) => {
+      const x0 = x0all + i * (lw + gap), cx = x0 + lw / 2, r = lw * 0.12;
+      pl.cx = cx; pl.hitY = hitY;
+      const dim = pl.gone ? 0.35 : 1;
+      c2.globalAlpha = dim;
+      // en-tête du joueur
+      const fs = Math.max(13, Math.min(lw * 0.075, 26)), ss = Math.max(22, Math.min(lw * 0.13, 48));
+      c2.textAlign = 'center'; c2.textBaseline = 'alphabetic';
+      c2.shadowColor = 'rgba(30,5,40,0.75)'; c2.shadowBlur = 8;
+      c2.fillStyle = pl.color; c2.font = '800 ' + fs + 'px ' + FONT_B;
+      c2.fillText(n > 1 ? pl.name + (pl.gone ? ' (déconnecté)' : '') : 'SCORE', cx, topY - ss - fs * 1.6);
+      c2.fillStyle = C.fg; c2.font = ss + 'px ' + FONT_D;
+      c2.fillText(fmt(pl.score), cx, topY - fs * 1.5);
+      c2.fillStyle = C.gold; c2.font = '600 ' + fs * 0.9 + 'px ' + FONT_B;
+      c2.fillText('combo ' + pl.combo + '  ·  ×' + Math.min(4, 1 + Math.floor(pl.combo / 10)), cx, topY - fs * 0.35);
+      c2.shadowBlur = 0;
+      // piste
+      c2.fillStyle = 'rgba(24,10,40,0.62)';
+      c2.beginPath();
+      if (c2.roundRect) c2.roundRect(x0, topY, lw, H - topY + 24, 18); else c2.rect(x0, topY, lw, H - topY);
+      c2.fill();
+      c2.strokeStyle = pl.color; c2.globalAlpha = 0.4 * dim; c2.lineWidth = 2;
+      c2.beginPath(); c2.moveTo(x0, topY); c2.lineTo(x0, H); c2.moveTo(x0 + lw, topY); c2.lineTo(x0 + lw, H); c2.stroke();
+      c2.globalAlpha = dim;
+      // lignes de temps
+      const k0 = Math.ceil((now - G.songStart) / beat), k1 = Math.floor((now + LOOK - G.songStart) / beat);
+      for (let k = Math.max(0, k0); k <= k1; k++) {
+        const y = hitY - ((G.songStart + k * beat - now) / LOOK) * (hitY - topY);
+        c2.strokeStyle = k % 4 === 0 ? 'rgba(255,240,228,0.22)' : 'rgba(255,240,228,0.08)';
+        c2.lineWidth = k % 4 === 0 ? 2 : 1;
+        c2.beginPath(); c2.moveTo(x0, y); c2.lineTo(x0 + lw, y); c2.stroke();
+      }
+      // la poche
+      pl.squash *= 0.86;
+      const sq = 1 + (reduced ? 0 : 0.14 * pl.squash);
+      const pw = r * 3.9 * sq, ph = r * 2.9 / sq;
+      pocketShape(cx, hitY, pw, ph);
+      c2.fillStyle = C.denim; c2.globalAlpha = 0.85 * dim; c2.fill(); c2.globalAlpha = dim;
+      c2.save(); c2.setLineDash([6, 5]); c2.strokeStyle = C.gold; c2.lineWidth = 2;
+      pocketShape(cx, hitY, pw - 14, ph - 14); c2.stroke(); c2.restore();
+      // notes
+      for (let j = Math.max(0, pl.idx - 8); j < pl.notes.length; j++) {
+        const note = pl.notes[j], dt = note.t - now;
+        if (dt > LOOK + 0.2) break;
+        if (note.judged && note.judged !== 'miss') continue;
+        const y = hitY - (dt / LOOK) * (hitY - topY);
+        const dir = note.d === 'L' ? -1 : note.d === 'R' ? 1 : 0, nx = cx + dir * r * 0.9;
+        if (note.judged === 'miss') { const a = Math.max(0, 1 + dt / 0.5); if (a > 0) booty(nx, y, r, C.grey, a * 0.6 * dim); }
+        else {
+          const a = Math.min(1, Math.max(0, (y - topY + r) / 80)) * dim;
+          booty(nx, y, r, pl.color, a);
+          if (dir) arrow(nx + dir * r * 2.15, y, r * 0.48, dir, C.gold, a);
+        }
+      }
+      // Frénésie : grosses fesses dans la poche et compteur de mouvements
+      const fzNow = G.frenzies.find((f) => now >= f.t0 && now <= f.t1);
+      if (fzNow) {
+        const k = (now - fzNow.t0) / (fzNow.t1 - fzNow.t0);
+        booty(cx, hitY - r * 2.6, r * 1.5 * (1 + (reduced ? 0 : 0.3 * pl.squash)), pl.color, dim);
+        c2.textAlign = 'center'; c2.textBaseline = 'middle';
+        c2.fillStyle = C.gold; c2.font = Math.round(Math.min(lw * 0.13, 44)) + 'px ' + FONT_D;
+        c2.fillText('FRÉNÉSIE', cx, topY + lw * 0.12);
+        c2.fillStyle = C.fg; c2.font = Math.round(Math.min(lw * 0.24, 90)) + 'px ' + FONT_D;
+        c2.fillText('×' + pl.fz, cx, topY + lw * 0.34);
+        c2.fillStyle = 'rgba(255,255,255,0.15)'; c2.fillRect(x0 + 12, topY + lw * 0.5, lw - 24, 8);
+        c2.fillStyle = C.pink; c2.fillRect(x0 + 12, topY + lw * 0.5, (lw - 24) * (1 - k), 8);
+      }
+      // particules
+      for (const p of pl.parts) { p.x += p.vx; p.y += p.vy; p.vy += 0.25; p.life -= 0.025; }
+      pl.parts = pl.parts.filter((p) => p.life > 0);
+      for (const p of pl.parts) { c2.globalAlpha = p.life; c2.fillStyle = p.color; c2.beginPath(); c2.ellipse(p.x, p.y, 7, 3.5, (p.rot += 0.18), 0, Math.PI * 2); c2.fill(); }
+      // verdict
+      pl.popups = pl.popups.filter((p) => tnow - p.born < (p.dur || 700));
+      const last = pl.popups[pl.popups.length - 1];
+      if (last) {
+        const age = (tnow - last.born) / (last.dur || 700);
+        c2.globalAlpha = (1 - age) * dim;
+        c2.fillStyle = { perfect: C.gold, good: pl.color, ok: C.fg, miss: C.grey }[last.kind];
+        c2.font = Math.round(Math.min(lw * 0.12, 40)) + 'px ' + FONT_D;
+        c2.textAlign = 'center'; c2.textBaseline = 'middle';
+        c2.fillText(last.text, cx, hitY + r * 2.3 - age * 16);
+      }
+      c2.globalAlpha = 1;
+    });
+    if (role === 'solo' && G.input === 'tap') {
+      c2.fillStyle = C.fg; c2.font = '600 14px ' + FONT_B; c2.textAlign = 'center'; c2.textBaseline = 'middle';
+      c2.fillText(G.lr ? (W < 600 ? 'Doigt : tape à gauche, au milieu ou à droite' : 'Mode doigt : tape à gauche, au milieu ou à droite (ou ← Espace →)') : "Mode doigt : tape l'écran ou Espace sur chaque BOUM", W / 2, 32);
+    }
+  }
+
+  // ---------- 3D (Three.js) ----------
+  // Un ponton en bois par joueur, qui part vers le coucher de soleil ; les fesses arrivent du large.
+  const T3 = { tried: false, ok: false };
+  const LOOK3 = 2.3; // secondes de notes visibles en 3D
+  const L3 = 46; // longueur du ponton visible (unités 3D)
+  const LANE_W = 2.2, LANE_GAP = 0.9, DECK_Y = 0.6, BOOTY_R = 0.42;
+  const v3 = () => new THREE.Vector3();
+
+  function canvasTex(w, h, draw) {
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    draw(c.getContext('2d'), w, h);
+    return new THREE.CanvasTexture(c);
+  }
+
+  function init3D() {
+    if (T3.tried) return T3.ok;
+    T3.tried = true;
+    try {
+      if (typeof THREE === 'undefined') return false;
+      const R = T3;
+      R.renderer = new THREE.WebGLRenderer({ canvas: $('#stage3d'), antialias: true, powerPreference: 'high-performance' });
+      R.scene = new THREE.Scene();
+      R.camera = new THREE.PerspectiveCamera(55, 1, 0.1, 2500);
+      R.scene.fog = new THREE.Fog(0xf2865f, 40, 230);
+      R.tmp = v3();
+
+      // ciel en dégradé
+      const sky = new THREE.Mesh(new THREE.SphereGeometry(900, 32, 16), new THREE.ShaderMaterial({
+        side: THREE.BackSide, depthWrite: false, depthTest: false, fog: false,
+        uniforms: { top: { value: new THREE.Color(0x2a0f45) }, mid: { value: new THREE.Color(0xa8306c) }, bot: { value: new THREE.Color(0xffa45e) } },
+        vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+        fragmentShader: 'uniform vec3 top; uniform vec3 mid; uniform vec3 bot; varying vec3 vP; void main(){ float h = vP.y; vec3 c = h > 0.08 ? mix(mid, top, smoothstep(0.08, 0.5, h)) : mix(bot, mid, smoothstep(-0.04, 0.08, h)); gl_FragColor = vec4(c, 1.0); }'
+      }));
+      sky.renderOrder = -3; R.scene.add(sky);
+
+      // halo + soleil rayé
+      const glowTex = canvasTex(256, 256, (g, w) => {
+        const r = w / 2, grd = g.createRadialGradient(r, r, 0, r, r, r);
+        grd.addColorStop(0, 'rgba(255,200,110,0.9)'); grd.addColorStop(0.45, 'rgba(255,140,110,0.35)'); grd.addColorStop(1, 'rgba(255,120,120,0)');
+        g.fillStyle = grd; g.fillRect(0, 0, w, w);
+      });
+      R.glow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: glowTex, transparent: true, depthWrite: false, fog: false, blending: THREE.AdditiveBlending, opacity: 0.5 }));
+      R.glow.scale.set(520, 520, 1); R.glow.position.set(0, 40, -660); R.glow.renderOrder = -2; R.scene.add(R.glow);
+      const sunTex = canvasTex(512, 512, (g, w) => {
+        const r = w / 2, grd = g.createLinearGradient(0, 0, 0, w);
+        grd.addColorStop(0, '#ffe66b'); grd.addColorStop(1, '#ff5f7e');
+        g.fillStyle = grd; g.beginPath(); g.arc(r, r, r - 2, 0, Math.PI * 2); g.fill();
+        g.globalCompositeOperation = 'destination-out';
+        for (let i = 0; i < 6; i++) g.fillRect(0, r * (1.04 + i * 0.16), w, r * (0.03 + i * 0.02));
+      });
+      const sun = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: sunTex, transparent: true, depthWrite: false, fog: false }));
+      sun.scale.set(200, 200, 1); sun.position.set(0, 44, -640); sun.renderOrder = -1; R.scene.add(sun);
+
+      // mer en facettes, animée
+      R.seaGeo = new THREE.PlaneGeometry(1400, 1200, 56, 48);
+      R.seaGeo.rotateX(-Math.PI / 2); R.seaGeo.translate(0, -0.6, -480);
+      R.seaBase = Float32Array.from(R.seaGeo.attributes.position.array);
+      R.scene.add(new THREE.Mesh(R.seaGeo, new THREE.MeshStandardMaterial({ color: 0x17919c, roughness: 0.5, metalness: 0.1, flatShading: true })));
+
+      // plage au premier plan
+      R.sandMat = new THREE.MeshStandardMaterial({ color: 0xd99a68, roughness: 1 });
+      const sand = new THREE.Mesh(new THREE.PlaneGeometry(600, 40), R.sandMat);
+      sand.rotation.x = -Math.PI / 2; sand.position.set(0, 0.05, 16); R.scene.add(sand);
+      const foam = new THREE.Mesh(new THREE.PlaneGeometry(600, 1.2), new THREE.MeshBasicMaterial({ color: 0xfff1e0, transparent: true, opacity: 0.55 }));
+      foam.rotation.x = -Math.PI / 2; foam.position.set(0, 0.07, -4); R.scene.add(foam); R.foam = foam;
+
+      // lumières : contre-jour chaud du soleil + douce lumière rose de face
+      R.scene.add(new THREE.HemisphereLight(0xffd0b0, 0x40204a, 1.0));
+      const sunLight = new THREE.DirectionalLight(0xffa860, 0.85); sunLight.position.set(0, 25, -60); R.scene.add(sunLight);
+      const front = new THREE.DirectionalLight(0xff9ec0, 0.6); front.position.set(2, 8, 14); R.scene.add(front);
+
+      // matériaux et géométries partagés
+      R.trunkMat = new THREE.MeshStandardMaterial({ color: 0x7a5238, roughness: 1, flatShading: true });
+      R.frondMat = new THREE.MeshStandardMaterial({ color: 0x2e9e62, roughness: 0.8, side: THREE.DoubleSide, flatShading: true });
+      R.nutMat = new THREE.MeshStandardMaterial({ color: 0x5a3a22, roughness: 0.7 });
+      R.postMat = new THREE.MeshStandardMaterial({ color: 0x5b3b2a, roughness: 1 });
+      R.greyMat = new THREE.MeshStandardMaterial({ color: 0x8a7f90, roughness: 0.9, transparent: true, opacity: 0.6 });
+      R.beatMat = new THREE.MeshBasicMaterial({ color: 0xffe066, transparent: true, opacity: 0.35, fog: true });
+      R.cheekGeo = new THREE.SphereGeometry(BOOTY_R, 24, 16);
+      R.arrowGeo = new THREE.ConeGeometry(0.26, 0.6, 12);
+      R.arrowMat = new THREE.MeshBasicMaterial({ color: 0xffe066 });
+      R.nutGeo = new THREE.SphereGeometry(0.17, 10, 8);
+      R.postGeo = new THREE.CylinderGeometry(0.09, 0.09, 2.2, 6);
+      R.islandGeo = new THREE.SphereGeometry(3, 16, 8);
+      R.frondGeo = (() => {
+        const len = 3, g = new THREE.PlaneGeometry(len, 1, 12, 2), p = g.attributes.position;
+        for (let i = 0; i < p.count; i++) {
+          const x = p.getX(i) + len / 2, w = 0.5 * Math.sin(Math.PI * Math.min(1, x / len + 0.04));
+          p.setXYZ(i, x, 0.55 * x - 0.3 * x * x, p.getY(i) * w * 2);
+        }
+        g.computeVertexNormals();
+        return g;
+      })();
+      R.plankTex = canvasTex(128, 256, (g, w, h) => {
+        g.fillStyle = '#7d5235'; g.fillRect(0, 0, w, h);
+        for (let y = 0; y < h; y += 32) {
+          const l = 40 + Math.random() * 18;
+          g.fillStyle = 'hsl(24, 42%, ' + l + '%)'; g.fillRect(0, y + 2, w, 28);
+          g.fillStyle = 'rgba(60,30,15,0.35)'; for (let k = 0; k < 4; k++) g.fillRect(Math.random() * w, y + 6 + Math.random() * 18, 30 + Math.random() * 40, 1.5);
+          g.fillStyle = '#3d2416'; g.fillRect(8, y + 14, 4, 4); g.fillRect(w - 12, y + 14, 4, 4);
+        }
+      });
+      R.plankTex.wrapS = R.plankTex.wrapT = THREE.RepeatWrapping;
+      R.plankTex.repeat.set(1, (L3 + 14) / 2.4);
+      R.pocketTex = canvasTex(256, 220, (g, w, h) => {
+        const shape = (inset) => { g.beginPath(); g.moveTo(inset, inset); g.lineTo(w - inset, inset); g.lineTo(w - inset, h * 0.62 - inset * 0.3); g.lineTo(w / 2, h - inset); g.lineTo(inset, h * 0.62 - inset * 0.3); g.closePath(); };
+        shape(4); g.fillStyle = '#3d5aa8'; g.fill();
+        g.setLineDash([12, 9]); g.lineWidth = 5; g.strokeStyle = '#ffe066'; shape(22); g.stroke();
+      });
+      R.dyn = new THREE.Group(); R.scene.add(R.dyn);
+      T3.ok = true;
+    } catch (e) {
+      console.error('3D indisponible, retour à la 2D', e);
+      T3.ok = false;
+    }
+    return T3.ok;
+  }
+
+  function makePalm(h, lean) {
+    const R = T3, g = new THREE.Group();
+    const curve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, h * 0.55, 0), new THREE.Vector3(lean, h, 0));
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 10, 0.2, 7, false), R.trunkMat));
+    const crown = new THREE.Group(); crown.position.set(lean, h, 0); g.add(crown);
+    for (let i = 0; i < 9; i++) {
+      const f = new THREE.Mesh(R.frondGeo, R.frondMat);
+      f.rotation.y = (i / 9) * Math.PI * 2 + Math.random() * 0.3;
+      f.rotation.z = (Math.random() - 0.5) * 0.3;
+      crown.add(f);
+    }
+    for (let i = 0; i < 3; i++) { const c = new THREE.Mesh(R.nutGeo, R.nutMat); c.position.set(Math.cos(i * 2.1) * 0.2, -0.18, Math.sin(i * 2.1) * 0.2); crown.add(c); }
+    return { g, crown, phase: Math.random() * 6 };
+  }
+
+  function setupLanes3D(players) {
+    const R = T3;
+    R.dyn.traverse((o) => { if (o.geometry && o.geometry !== R.cheekGeo && o.geometry !== R.arrowGeo && o.geometry !== R.frondGeo && o.geometry !== R.nutGeo && o.geometry !== R.postGeo && o.geometry !== R.islandGeo) o.geometry.dispose(); });
+    R.scene.remove(R.dyn);
+    R.dyn = new THREE.Group(); R.scene.add(R.dyn);
+    R.palms = [];
+    const n = players.length, span = n * LANE_W + (n - 1) * LANE_GAP, half = span / 2;
+    const deckLen = L3 + 14, deckZ = 6 - deckLen / 2;
+    players.forEach((pl, i) => {
+      const x = -half + LANE_W / 2 + i * (LANE_W + LANE_GAP);
+      const grp = new THREE.Group(); grp.position.x = x; R.dyn.add(grp);
+      const deck = new THREE.Mesh(new THREE.BoxGeometry(LANE_W, 0.18, deckLen), new THREE.MeshStandardMaterial({ map: R.plankTex, roughness: 0.95 }));
+      deck.position.set(0, DECK_Y - 0.09, deckZ); grp.add(deck);
+      const railMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(pl.color) });
+      for (const s of [-1, 1]) {
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.1, deckLen), railMat);
+        rail.position.set(s * (LANE_W / 2 - 0.04), DECK_Y + 0.05, deckZ); grp.add(rail);
+        for (let z = 4; z > -deckLen + 6; z -= 3) { const p = new THREE.Mesh(R.postGeo, R.postMat); p.position.set(s * (LANE_W / 2 - 0.12), DECK_Y - 1.1, z); grp.add(p); }
+      }
+      const pocket = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 1.63), new THREE.MeshBasicMaterial({ map: R.pocketTex, transparent: true }));
+      pocket.rotation.x = -Math.PI / 2; pocket.position.set(0, DECK_Y + 0.01, 0); grp.add(pocket);
+      const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(pl.color), roughness: 0.42, emissive: new THREE.Color(pl.color), emissiveIntensity: 0.12 });
+      const pool = [];
+      for (let k = 0; k < 16; k++) {
+        const b = new THREE.Group();
+        for (const s of [-1, 1]) { const c = new THREE.Mesh(R.cheekGeo, mat); c.position.x = s * BOOTY_R * 0.72; b.add(c); }
+        const cone = new THREE.Mesh(R.arrowGeo, R.arrowMat); cone.visible = false; b.add(cone);
+        b.visible = false; grp.add(b); pool.push(b);
+      }
+      const beats = [];
+      for (let k = 0; k < 8; k++) { const bb = new THREE.Mesh(new THREE.BoxGeometry(LANE_W - 0.2, 0.02, 0.07), R.beatMat); bb.position.y = DECK_Y + 0.01; bb.visible = false; grp.add(bb); beats.push(bb); }
+      pl.lane3 = { x, grp, pocket, mat, pool, beats };
+    });
+    // palmiers : deux sur la plage, d'autres sur des îlots le long des pontons
+    for (const s of [-1, 1]) {
+      const fp = makePalm(6.5, s * -1.2); fp.g.position.set(s * (half + 3.2), 0, 2.5); R.dyn.add(fp.g); R.palms.push(Object.assign(fp, { side: s }));
+      [-9, -25, -44].forEach((z, k) => {
+        const ix = s * (half + 4.5 + k * 1.5 + Math.random() * 1.5);
+        const isl = new THREE.Mesh(R.islandGeo, R.sandMat); isl.scale.set(1, 0.22, 0.8); isl.position.set(ix, -0.55, z); R.dyn.add(isl);
+        const p = makePalm(5 + Math.random() * 2, (Math.random() - 0.5) * 2); p.g.position.set(ix, 0, z); R.dyn.add(p.g); R.palms.push(Object.assign(p, { side: s }));
+      });
+    }
+    resize3D();
+  }
+
+  function resize3D() {
+    const R = T3;
+    if (!R.ok || !W || !H) return;
+    R.renderer.setPixelRatio(DPR);
+    R.renderer.setSize(W, H, false);
+    R.camera.aspect = W / H;
+    // on recule la caméra si les pontons ne tiennent pas dans l'écran
+    const n = Math.max(1, G.players.length);
+    const half = (n * LANE_W + (n - 1) * LANE_GAP) / 2 + 0.7;
+    const tanH = Math.tan(THREE.MathUtils.degToRad(R.camera.fov / 2)) * R.camera.aspect;
+    const k = Math.max(1, half / (tanH * 7.7));
+    R.camera.position.set(0, 4.2 * k, 6.5 * k);
+    R.camera.lookAt(0, DECK_Y, -16);
+    R.camera.updateProjectionMatrix();
+  }
+
+  function frame3D(now) {
+    const R = T3, t = performance.now() / 1000, beat = G.stepDur * 4, sinceStart = now - G.songStart;
+    const fl = sinceStart > 0 ? Math.pow(1 - (sinceStart / beat) % 1, 3) : 0;
+    if (!reduced) {
+      const pos = R.seaGeo.attributes.position, a = pos.array, b = R.seaBase;
+      for (let i = 0; i < a.length; i += 3) a[i + 1] = b[i + 1] + Math.sin(b[i] * 0.08 + t * 1.3) * 0.22 + Math.cos(b[i + 2] * 0.11 + t * 0.9) * 0.22;
+      pos.needsUpdate = true;
+    }
+    R.glow.material.opacity = 0.4 + (reduced ? 0 : 0.45 * fl);
+    if (!reduced) R.foam.position.z = -4 + Math.sin(t * 0.8) * 0.5;
+    for (const p of R.palms) p.crown.rotation.z = reduced ? 0 : (Math.sin(t * 0.9 + p.phase) * 0.05 + fl * 0.07) * p.side;
+    const jig = reduced ? 0 : fl;
+    for (const pl of G.players) {
+      const L = pl.lane3;
+      pl.squash *= 0.86;
+      L.pocket.scale.setScalar(1 + (reduced ? 0 : 0.2 * pl.squash));
+      let k = 0;
+      for (let j = Math.max(0, pl.idx - 8); j < pl.notes.length && k < L.pool.length; j++) {
+        const n = pl.notes[j], dt = n.t - now;
+        if (dt > LOOK3) break;
+        if ((n.judged && n.judged !== 'miss') || dt < -0.6) continue;
+        const m = L.pool[k++], missed = n.judged === 'miss';
+        m.visible = true;
+        const dir = n.d === 'L' ? -1 : n.d === 'R' ? 1 : 0;
+        m.position.set(dir * 0.3, DECK_Y + BOOTY_R + (missed ? Math.min(0, dt) * 5 : 0), -(dt / LOOK3) * L3);
+        m.children[0].material = m.children[1].material = missed ? R.greyMat : L.mat;
+        const cone = m.children[2];
+        cone.visible = !!dir && !missed;
+        if (dir) { cone.position.set(dir * 1.02, 0.1, 0); cone.rotation.z = -dir * Math.PI / 2; }
+        m.scale.set(1 + 0.08 * jig, 1 - 0.16 * jig, 1); // ça remue sur le temps
+      }
+      for (; k < L.pool.length; k++) L.pool[k].visible = false;
+      if (G.frenzies.some((f) => now >= f.t0 && now <= f.t1)) { // Frénésie : une grosse paire de fesses sur la poche
+        const m = L.pool[L.pool.length - 1], s2 = 1.7 * (1 + (reduced ? 0 : 0.25 * pl.squash));
+        m.visible = true; m.children[0].material = m.children[1].material = L.mat; m.children[2].visible = false;
+        m.scale.set(s2 * (1 + 0.1 * pl.squash), s2 * (1 - 0.15 * pl.squash), s2);
+        m.position.set(0, DECK_Y + BOOTY_R * s2, -2.4);
+      }
+      // barres de temps sur le ponton
+      let bi = 0;
+      const k0 = Math.max(0, Math.ceil((now - G.songStart) / beat)), k1 = Math.floor((now + LOOK3 - G.songStart) / beat);
+      for (let kb = k0; kb <= k1 && bi < L.beats.length; kb++) { const bb = L.beats[bi++]; bb.visible = true; bb.position.z = -((G.songStart + kb * beat - now) / LOOK3) * L3; }
+      for (; bi < L.beats.length; bi++) L.beats[bi].visible = false;
+      // position de la poche à l'écran, pour le texte et les pétales
+      R.tmp.set(L.x, DECK_Y, 0).project(R.camera);
+      pl.cx = (R.tmp.x * 0.5 + 0.5) * W; pl.hitY = (-R.tmp.y * 0.5 + 0.5) * H;
+    }
+    R.renderer.render(R.scene, R.camera);
+    drawOverlay3D(sinceStart, now);
+  }
+
+  // Score, verdicts et pétales par-dessus la scène 3D
+  function drawOverlay3D(sinceStart, now) {
+    c2.clearRect(0, 0, W, H);
+    const prog = Math.max(0, Math.min(1, sinceStart / (G.totalSteps * G.stepDur)));
+    c2.fillStyle = 'rgba(30,5,40,0.45)'; c2.fillRect(16, 10, W - 32, 5);
+    c2.fillStyle = C.peach; c2.fillRect(16, 10, (W - 32) * prog, 5);
+    const n = G.players.length, tnow = performance.now();
+    const colW = (W - 32) / n;
+    G.players.forEach((pl, i) => {
+      const hx = n > 1 ? 16 + colW * (i + 0.5) : W / 2;
+      const fs = Math.max(13, Math.min(colW * 0.07, 24)), ss = Math.max(24, Math.min(colW * 0.12, 46));
+      c2.globalAlpha = pl.gone ? 0.4 : 1;
+      c2.textAlign = 'center'; c2.textBaseline = 'alphabetic';
+      c2.shadowColor = 'rgba(30,5,40,0.9)'; c2.shadowBlur = 10;
+      c2.fillStyle = pl.color; c2.font = '800 ' + fs + 'px ' + FONT_B;
+      c2.fillText(n > 1 ? pl.name + (pl.gone ? ' (déconnecté)' : '') : 'SCORE', hx, 30 + fs);
+      c2.fillStyle = C.fg; c2.font = ss + 'px ' + FONT_D;
+      c2.fillText(fmt(pl.score), hx, 34 + fs + ss);
+      c2.fillStyle = C.gold; c2.font = '600 ' + fs * 0.9 + 'px ' + FONT_B;
+      c2.fillText('combo ' + pl.combo + '  ·  ×' + Math.min(4, 1 + Math.floor(pl.combo / 10)), hx, 40 + fs * 2 + ss);
+      const fzNow = G.frenzies.find((f) => now >= f.t0 && now <= f.t1);
+      if (fzNow) {
+        const k = (now - fzNow.t0) / (fzNow.t1 - fzNow.t0), bw = Math.min(colW * 0.8, 260);
+        c2.fillStyle = C.gold; c2.font = Math.round(Math.max(24, Math.min(colW * 0.11, 48))) + 'px ' + FONT_D;
+        c2.fillText('FRÉNÉSIE', pl.cx, H * 0.3);
+        c2.fillStyle = C.fg; c2.font = Math.round(Math.max(44, Math.min(colW * 0.2, 96))) + 'px ' + FONT_D;
+        c2.fillText('×' + pl.fz, pl.cx, H * 0.3 + Math.max(50, Math.min(colW * 0.2, 96)));
+        c2.fillStyle = 'rgba(30,5,40,0.5)'; c2.fillRect(pl.cx - bw / 2, H * 0.3 + 18, bw, 8);
+        c2.fillStyle = C.pink; c2.fillRect(pl.cx - bw / 2, H * 0.3 + 18, bw * (1 - k), 8);
+      }
+      for (const p of pl.parts) { p.x += p.vx; p.y += p.vy; p.vy += 0.25; p.life -= 0.025; }
+      pl.parts = pl.parts.filter((p) => p.life > 0);
+      for (const p of pl.parts) { c2.globalAlpha = p.life; c2.fillStyle = p.color; c2.beginPath(); c2.ellipse(p.x, p.y, 7, 3.5, (p.rot += 0.18), 0, Math.PI * 2); c2.fill(); }
+      pl.popups = pl.popups.filter((p) => tnow - p.born < (p.dur || 700));
+      const last = pl.popups[pl.popups.length - 1];
+      if (last) {
+        const age = (tnow - last.born) / (last.dur || 700);
+        c2.globalAlpha = 1 - age;
+        c2.fillStyle = { perfect: C.gold, good: pl.color, ok: C.fg, miss: C.grey }[last.kind];
+        c2.font = Math.round(Math.max(22, Math.min(colW * 0.1, 40))) + 'px ' + FONT_D;
+        c2.textBaseline = 'middle';
+        const below = pl.hitY + 64 < H - 70;
+        c2.fillText(last.text, pl.cx, (below ? pl.hitY + 52 : pl.hitY - 90) - age * 16);
+      }
+      c2.shadowBlur = 0; c2.globalAlpha = 1;
+    });
+    if (role === 'solo' && G.input === 'tap') {
+      c2.fillStyle = C.fg; c2.font = '600 14px ' + FONT_B; c2.textAlign = 'center'; c2.textBaseline = 'middle';
+      c2.fillText(G.lr ? (W < 600 ? 'Doigt : tape à gauche, au milieu ou à droite' : 'Mode doigt : tape à gauche, au milieu ou à droite (ou ← Espace →)') : "Mode doigt : tape l'écran ou Espace sur chaque BOUM", W / 2, H - 80);
+    }
+  }
+
+  // ---------- Calibration (téléphone dans la poche, guidée à la voix, résultats sur la télé) ----------
+  const CAL = { active: false, collecting: false, parts: [], step: '', timers: [], beeps: [], run: 0, beatT0: 0, visT0: 0 };
+  const CAL_BPM = 100, CAL_BEATS = 12;
+  const CAL_STEPS = [
+    { id: 'force', label: 'Force', title: 'Twerke 5 fois, à fond', say: 'Première étape : twerke cinq fois, à fond, comme en jouant.', secs: 7 },
+    { id: 'left', label: 'Gauche', title: 'Hanche à gauche, 4 fois', say: 'Maintenant, hanche à gauche, quatre fois.', secs: 6 },
+    { id: 'right', label: 'Droite', title: 'Hanche à droite, 4 fois', say: 'Puis hanche à droite, quatre fois.', secs: 6 },
+    { id: 'beat', label: 'Rythme', title: 'Twerke sur chaque BIP', say: 'Dernière étape : après les quatre bips de départ, twerke sur chaque bip.' }
+  ];
+  const median = (a) => { const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const calWait = (ms) => new Promise((res) => { CAL.timers.push(setTimeout(res, ms)); });
+  const calBeep = (t, countIn) => tone(t, 'square', countIn ? 660 : 1320, 0, 0, 0.2, 0.07, master, 4000);
+
+  function calHeader(step, big, help) {
+    $('#calib-step').textContent = step;
+    $('#calib-big').textContent = big;
+    if (help != null) $('#calib-help').textContent = help;
+  }
+  function calMarkSteps() {
+    const order = CAL_STEPS.map((s) => s.id), cur = order.indexOf(CAL.step);
+    document.querySelectorAll('#calib-steps li').forEach((li, i) => {
+      li.dataset.state = CAL.done ? 'done' : i < cur ? 'done' : i === cur ? 'now' : '';
+    });
+  }
+  // Mesure : la télé (ou le téléphone en solo) baisse le seuil pour capter tous les mouvements
+  function calCollect(on) {
+    CAL.collecting = on;
+    if (role === 'host') broadcast({ type: 'calstep', step: on ? CAL.step : '' });
+    else motion.calTh = on ? 5 : 0;
+  }
+  function calibPeak(part, pk) {
+    if (!CAL.collecting || !CAL.step || !part) return;
+    (part.peaks[CAL.step] = part.peaks[CAL.step] || []).push(pk);
+    part.flash = performance.now();
+  }
+
+  function clearCalib() {
+    CAL.timers.forEach(clearTimeout); CAL.timers = [];
+    CAL.run++;
+    if (CAL.active) { calCollect(false); if (role === 'host') broadcast({ type: 'calib', on: false }); }
+    CAL.active = false; CAL.step = ''; CAL.beatT0 = 0;
+    motion.calTh = 0;
+    for (const c of CAL.parts) if (c.ref) c.ref.cal = null;
+  }
+
+  async function startCalib() {
+    ensureAudio();
+    clearCalib();
+    const run = CAL.run;
+    if (role === 'host') {
+      HOST.players = HOST.players.filter((p) => !p.gone);
+      if (!HOST.players.length) return;
+      HOST.phase = 'calib';
+      broadcastState();
+      CAL.parts = HOST.players.map((p) => ({ name: p.name, color: p.color, ref: p, peaks: {}, res: {} }));
+      CAL.parts.forEach((c) => { c.ref.cal = c; });
+      broadcast({ type: 'calib', on: true });
+    } else {
+      CAL.parts = [{ name: 'Toi', color: tok('--p1'), ref: null, peaks: {}, res: {} }];
+    }
+    CAL.active = true; CAL.done = false; CAL.step = '';
+    lockScreen();
+    $('#vis-panel').hidden = role !== 'host';
+    $('#calib-again').textContent = 'Recommencer';
+    show('calib');
+    renderCalib();
+    calMarkSteps();
+    const many = CAL.parts.length > 1;
+    calHeader('Préparation', '8', (many ? 'Téléphones' : 'Téléphone') + ' dans la poche arrière, écran vers l’extérieur, à l’endroit. Ensuite, écoute la voix et suis les consignes.');
+    say((many ? 'Tout le monde, téléphone' : 'Glisse ton téléphone') + ' dans la poche arrière, écran vers l’extérieur, à l’endroit. La calibration commence dans huit secondes.');
+    for (let s = 8; s > 0; s--) {
+      $('#calib-big').textContent = s;
+      cowbell(ctx.currentTime + 0.01, s <= 3, master);
+      await calWait(1000); if (run !== CAL.run) return;
+    }
+    for (const st of CAL_STEPS) {
+      CAL.step = st.id; calMarkSteps();
+      calHeader(st.label, '…', st.title);
+      say(st.say);
+      await calWait(st.id === 'beat' ? 4200 : 3000); if (run !== CAL.run) return;
+      calCollect(true);
+      if (st.id !== 'beat') {
+        tone(ctx.currentTime, 'triangle', 880, 1760, 0.12, 0.25, 0.2, master);
+        for (let s = st.secs; s > 0; s--) { $('#calib-big').textContent = s; await calWait(1000); if (run !== CAL.run) return; }
+        await calWait(400); if (run !== CAL.run) return; // laisse arriver les derniers mouvements
+      } else {
+        const beat = 60 / CAL_BPM, t0 = ctx.currentTime + 0.5;
+        CAL.beeps = [];
+        for (let i = 0; i < 4 + CAL_BEATS; i++) { const t = t0 + i * beat; calBeep(t, i < 4); if (i >= 4) CAL.beeps.push(t); }
+        CAL.beatT0 = t0;
+        await calWait(((4 + CAL_BEATS) * beat + 1) * 1000); if (run !== CAL.run) return;
+        CAL.beatT0 = 0;
+      }
+      calCollect(false);
+      evalCalStep(st.id);
+      renderCalibParts();
+    }
+    finishCalib();
+  }
+
+  function evalCalStep(id) {
+    for (const c of CAL.parts) {
+      const pk = c.peaks[id] || [];
+      if (id === 'force') {
+        // seuil = la moitié de la force médiane de tes meilleurs twerks
+        const top = pk.map((p) => p.mag).sort((a, b) => b - a).slice(0, 5);
+        c.res.sens = top.length >= 3 ? clamp(Math.round((26 - clamp(median(top) * 0.5, 4, 23.8)) / 2.2), 1, 10) : null;
+      } else if (id === 'left' || id === 'right') {
+        const top = [...pk].sort((a, b) => b.mag - a.mag).slice(0, 4);
+        c.res[id] = { L: top.filter((p) => p.raw === 'L').length, R: top.filter((p) => p.raw === 'R').length, n: top.length };
+        if (id === 'right') {
+          const l = c.res.left || { L: 0, R: 0, n: 0 }, r = c.res.right;
+          const ok = l.L + r.R, inv = l.R + r.L, tot = l.n + r.n;
+          c.res.sides = ok + inv < 4 || ok + inv < tot * 0.6 ? 'unsure' : ok >= (ok + inv) * 0.75 ? 'ok' : inv >= (ok + inv) * 0.75 ? 'flip' : 'unsure';
+        }
+      } else if (id === 'beat') {
+        // pour chaque bip, le mouvement le plus fort autour du bip
+        c.res.marks = CAL.beeps.map((b) => {
+          let best = null;
+          for (const p of pk) { const d = p.t - b; if (d > -0.25 && d < 0.4 && (!best || p.mag > best.mag)) best = { mag: p.mag, d }; }
+          return best ? best.d : null;
+        });
+        const ds = c.res.marks.filter((d) => d != null);
+        c.res.lat = ds.length >= 5 ? clamp(Math.round(median(ds) * 1000), -150, 400) : null;
+      }
+    }
+  }
+
+  function finishCalib() {
+    CAL.active = false; CAL.done = true; CAL.step = ''; calMarkSteps();
+    motion.calTh = 0;
+    let allGood = true;
+    for (const c of CAL.parts) {
+      const r = c.res, upd = {};
+      if (r.sens) upd.sens = r.sens; else allGood = false;
+      if (r.sides === 'ok') upd.flip = false; else if (r.sides === 'flip') upd.flip = true; else allGood = false;
+      if (r.lat != null) upd.lat = r.lat; else allGood = false;
+      if (c.ref) {
+        send(c.ref, Object.assign({ type: 'setcal' }, upd));
+        if (upd.lat != null) c.ref.lat = upd.lat;
+        c.ref.cal = null;
+      } else {
+        Object.assign(settings, upd);
+        store.set('sens', settings.sens); store.set('flip', settings.flip); store.set('lat', settings.lat);
+        syncSettings(); $('#flip').checked = settings.flip;
+      }
+    }
+    if (role === 'host') broadcast({ type: 'calib', on: false });
+    calHeader('Terminé', 'OK', allGood
+      ? (role === 'host' ? 'Réglages envoyés aux téléphones. Vous pouvez jouer.' : 'Réglages enregistrés. Tu peux jouer.')
+      : 'Certains réglages n’ont pas pu être mesurés (voir ci-dessous). Recommence, en faisant des mouvements bien nets.');
+    $('#calib-again').textContent = 'Recommencer';
+    say(allGood ? 'Calibration terminée !' + (role === 'host' ? '' : ' Tu peux sortir ton téléphone.') : 'Calibration terminée, mais certains réglages manquent. Regarde l’écran.');
+    renderCalibParts();
+  }
+
+  function renderCalib() {
+    const box = $('#calib-parts');
+    box.textContent = '';
+    for (const c of CAL.parts) {
+      const card = document.createElement('article');
+      card.className = 'panel card calib-card';
+      card.style.setProperty('--pc', c.color);
+      card.innerHTML =
+        '<div class="calib-who"><span class="dot"></span><b></b><span class="up" data-r="up"></span></div>' +
+        '<div class="mini"><i data-r="meter"></i></div>' +
+        '<dl class="stats">' +
+        '<div><dt>Mouvements captés</dt><dd data-r="n">0</dd></div><div><dt>Sensibilité</dt><dd data-r="sens">—</dd></div>' +
+        '<div><dt>Gauche / droite</dt><dd data-r="sides">—</dd></div><div><dt>Décalage</dt><dd data-r="lat">—</dd></div></dl>' +
+        '<div class="marks" data-r="marks" aria-label="Twerks sur les bips"></div>';
+      card.querySelector('b').textContent = c.name;
+      c.el = card;
+      box.appendChild(card);
+    }
+    renderCalibParts();
+  }
+  function renderCalibParts() {
+    for (const c of CAL.parts) {
+      if (!c.el) continue;
+      const r = c.res, q = (k) => c.el.querySelector('[data-r="' + k + '"]');
+      q('sens').textContent = r.sens ? SENS_LABELS[r.sens - 1] + ' (' + r.sens + '/10)' : r.sens === null ? 'Pas assez de twerks' : '—';
+      q('sides').textContent = { ok: 'Reconnus', flip: 'Inversés, corrigé', unsure: 'Pas sûrs : resserre la poche' }[r.sides] || '—';
+      q('lat').textContent = r.lat != null ? (r.lat > 0 ? '+' : '') + r.lat + ' ms' : r.marks ? 'Pas assez de bips' : '—';
+      const marks = q('marks');
+      marks.textContent = '';
+      (r.marks || []).forEach((d) => {
+        const i = document.createElement('i');
+        i.className = d == null ? 'miss' : Math.abs(d - (r.lat || 0) / 1000) < 0.06 ? 'good' : 'ok';
+        marks.appendChild(i);
+      });
+    }
+  }
+  function calibLoop() {
+    if ($('#calib').hidden) return;
+    requestAnimationFrame(calibLoop);
+    const now = performance.now();
+    for (const c of CAL.parts) {
+      if (!c.el) continue;
+      const q = (k) => c.el.querySelector('[data-r="' + k + '"]');
+      const lvl = c.ref ? (c.ref.meter || 0) : Math.max(motion.mag, motion.peak) / threshold();
+      c.shown = Math.max(Math.min(1.5, lvl), (c.shown || 0) * 0.9);
+      q('meter').style.width = Math.min(100, (c.shown / 1.5) * 100) + '%';
+      const up = c.ref ? c.ref.up : motion.seen ? Math.abs(motion.gy) > 5 : undefined;
+      const upTxt = up === undefined ? '' : up ? 'Debout' : 'Pas droit !';
+      if (q('up').textContent !== upTxt) { q('up').textContent = upTxt; q('up').classList.toggle('err', up === false); }
+      if (CAL.step) q('n').textContent = (c.peaks[CAL.step] || []).length;
+      c.el.classList.toggle('hit', now - (c.flash || 0) < 180);
+    }
+    // bips : compteur et pastille qui clignote (avec le réglage image/son)
+    const t0 = CAL.beatT0 || CAL.visT0;
+    const dot = $('#calib-dot');
+    if (t0 && ctx) {
+      const beat = 60 / CAL_BPM, vt = ctx.currentTime - outLat() + settings.vis / 1000, i = Math.floor((vt - t0) / beat);
+      const fl = i >= 0 ? Math.exp(-(vt - (t0 + i * beat)) * 9) : 0;
+      dot.style.transform = 'scale(' + (1 + (reduced ? 0 : 0.7 * fl)) + ')';
+      dot.style.opacity = 0.35 + 0.65 * fl;
+      if (CAL.beatT0) $('#calib-big').textContent = i < 0 ? '…' : i < 4 ? String(4 - i) : i < 4 + CAL_BEATS ? 'BIP ' + (i - 3) + '/' + CAL_BEATS : '…';
+    } else { dot.style.transform = 'scale(1)'; dot.style.opacity = 0.35; }
+  }
+  // Test image/son : 8 bips, la pastille doit s'allumer pile sur le son
+  function visTest() {
+    ensureAudio();
+    const beat = 60 / CAL_BPM, t0 = ctx.currentTime + 0.3;
+    for (let i = 0; i < 8; i++) calBeep(t0 + i * beat, false);
+    CAL.visT0 = t0;
+    clearTimeout(CAL.visTimer);
+    CAL.visTimer = setTimeout(() => { CAL.visT0 = 0; }, (8 * beat + 0.6) * 1000);
+  }
+  function leaveCalib() {
+    clearCalib(); say('');
+    if (role === 'host') backToLobby(); else { unlockScreen(); show('solo'); }
+  }
+
+  // ---------- SOLO ----------
+  function openSolo() {
+    role = 'solo';
+    mountSensor('#solo-sensor-slot');
+    renderTracks($('#solo-tracks'), settings.track, (id) => { settings.track = id; store.set('track', id); }, true);
+    show('solo');
+  }
+  async function soloStart() {
+    ensureAudio();
+    const likelyPhone = typeof DeviceMotionEvent !== 'undefined' && ('ontouchstart' in window);
+    if (likelyPhone) say('Glisse ton téléphone dans ta poche arrière, écran vers l’extérieur, à l’endroit.'); else say('');
+    const enabled = await enableMotion();
+    if (enabled && !motion.seen) await waitFor(() => motion.seen, 1200);
+    G.input = motion.seen ? 'motion' : 'tap';
+    if (G.input === 'tap' && likelyPhone) say('');
+    soloCountdown();
+  }
+  function soloCountdown() {
+    lockScreen();
+    const motionMode = G.input === 'motion';
+    countdown(motionMode ? 8 : 3,
+      motionMode ? 'Glisse ton téléphone dans ta poche arrière' : 'Prépare ton doigt',
+      motionMode ? (settings.lr ? 'Écran vers l’extérieur, à l’endroit. BOUM : twerk. Tom grave : hanche à gauche. Tchak aigu : hanche à droite.' : 'Écran vers l’extérieur, à l’endroit. Twerke sur chaque BOUM de la basse.') : "Capteur indisponible ici, donc mode doigt : tape l'écran (ou Espace) sur chaque BOUM.",
+      () => startSong(trackById(settings.track), [{ name: 'Toi', color: tok('--p1') }]));
+  }
+
+  // ---------- TÉLÉ (hôte) ----------
+  const HOST = { peer: null, code: '', players: [], trackId: settings.track, phase: 'lobby', pingTimer: null };
+  function peerOpts() {
+    // ?broker=hote:port permet de tester avec un serveur PeerJS local ; sinon serveur public de PeerJS
+    const b = new URLSearchParams(location.search).get('broker');
+    if (b) { const [host, port] = b.split(':'); return { host, port: +port || 9000, path: '/', secure: false, debug: 0 }; }
+    return { debug: 0 };
+  }
+  function peerError(e) {
+    const t = e && e.type;
+    if (t === 'peer-unavailable') return 'Aucune télé avec ce code. Vérifie le code affiché sur la télé.';
+    if (t === 'browser-incompatible') return 'Ce navigateur ne gère pas la connexion directe (WebRTC). Essaie Chrome, Safari ou Firefox.';
+    if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed') return 'Impossible de joindre le serveur de connexion. Vérifie la connexion Internet, puis réessaie.';
+    return 'Erreur de connexion (' + (t || 'inconnue') + '). Réessaie.';
+  }
+  const joinUrl = (code) => {
+    const q = new URLSearchParams(location.search);
+    q.set('salon', code);
+    return location.origin + location.pathname + '?' + q.toString();
+  };
+
+  function openHost() {
+    role = 'host';
+    ensureAudio();
+    lockScreen();
+    HOST.phase = 'lobby';
+    HOST.trackId = settings.track;
+    show('lobby');
+    renderSlots();
+    renderTracks($('#lobby-tracks'), HOST.trackId, (id) => { HOST.trackId = id; settings.track = id; store.set('track', id); broadcastState(); }, false);
+    if (HOST.peer && !HOST.peer.destroyed) return;
+    if (typeof Peer === 'undefined') { lobbyStatus('Le module de connexion n’a pas pu se charger. Vérifie la connexion Internet et recharge la page.', true); return; }
+    if (location.protocol === 'file:') lobbyStatus('Attention : ouverte comme fichier, cette page ne peut pas être rejointe. Héberge-la en https://.', true);
+    hostOpenPeer(0);
+    clearInterval(HOST.pingTimer);
+    HOST.pingTimer = setInterval(() => { for (const p of HOST.players) if (!p.gone) ping(p); }, 1000);
+  }
+  function lobbyStatus(text, err) { const el = $('#lobby-status'); el.textContent = text; el.classList.toggle('err', !!err); }
+  function hostOpenPeer(attempt) {
+    const code = String(1000 + Math.floor(Math.random() * 9000));
+    const peer = new Peer(PREFIX + code, peerOpts());
+    lobbyStatus('Connexion au serveur…');
+    peer.on('open', () => {
+      HOST.peer = peer; HOST.code = code;
+      $('#room-code').textContent = code;
+      const url = joinUrl(code);
+      $('#join-url').textContent = url;
+      renderQR(url);
+      lobbyStatus('Scanne le QR code avec ton téléphone, ou ouvre cette page et tape le code.');
+    });
+    peer.on('connection', (conn) => {
+      conn.on('data', (d) => hostMsg(conn, d));
+      conn.on('close', () => hostDrop(conn));
+      conn.on('error', () => hostDrop(conn));
+    });
+    peer.on('disconnected', () => { if (!peer.destroyed) { try { peer.reconnect(); } catch (e) { /* on réessaiera */ } } });
+    peer.on('error', (e) => {
+      if (e.type === 'unavailable-id' && attempt < 5) { peer.destroy(); hostOpenPeer(attempt + 1); return; }
+      if (e.type === 'peer-unavailable') return;
+      lobbyStatus(peerError(e), true);
+    });
+  }
+  function renderQR(text) {
+    const el = $('#qr');
+    if (typeof qrcode === 'undefined') { el.innerHTML = '<div class="ph"></div>'; el.firstChild.textContent = 'Code : ' + HOST.code; return; }
+    const q = qrcode(0, 'M'); q.addData(text); q.make();
+    el.innerHTML = q.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+  }
+
+  function renderSlots() {
+    const box = $('#slots');
+    box.textContent = '';
+    for (let i = 0; i < MAX_PLAYERS; i++) {
+      const p = HOST.players.find((x) => x.slot === i);
+      const d = document.createElement('div');
+      d.className = 'slot' + (p ? ' on' : '');
+      d.style.setProperty('--pc', COLORS[i]);
+      d.innerHTML = '<div class="who"><span class="dot"></span><span class="nm"></span></div>' + (p ? '<div class="mini"><i></i></div><div class="tw"></div>' : '');
+      d.querySelector('.nm').textContent = p ? p.name : 'En attente…';
+      if (!p) d.querySelector('.nm').classList.add('wait');
+      d.dataset.slot = i;
+      box.appendChild(d);
+    }
+    $('#host-start').disabled = $('#host-calib').disabled = !HOST.players.length;
+  }
+  function lobbyLoop() {
+    if ($('#lobby').hidden) return;
+    requestAnimationFrame(lobbyLoop);
+    const now = performance.now();
+    for (const p of HOST.players) {
+      const el = document.querySelector('.slot[data-slot="' + p.slot + '"]');
+      if (!el) continue;
+      const bar = el.querySelector('.mini i'), tw = el.querySelector('.tw');
+      p.meterShown = Math.max(p.meter || 0, (p.meterShown || 0) * 0.9);
+      if (bar) bar.style.width = Math.min(100, p.meterShown / 1.5 * 100) + '%';
+      if (tw) tw.textContent = now - (p.flash || 0) < 500 ? SIDE_TXT[p.side || 'C'] : (p.sensor === false ? 'Sans capteur : bouton à l’écran' : '');
+    }
+  }
+
+  function send(p, msg) { try { if (p.conn && p.conn.open) p.conn.send(msg); } catch (e) { /* connexion fermée */ } }
+  function broadcast(msg) { for (const p of HOST.players) if (!p.gone) send(p, msg); }
+  function broadcastState() {
+    broadcast({ type: 'state', phase: HOST.phase, lr: settings.lr, trackId: HOST.trackId, tracks: TRACKS.map((t) => ({ id: t.id, name: t.name, bpm: t.bpm, level: t.level })) });
+    if (HOST.phase === 'lobby') {
+      renderSlots();
+      const radio = document.getElementById('lobby-tracks-' + HOST.trackId);
+      if (radio) radio.checked = true;
+    }
+  }
+  function ping(p) { send(p, { type: 'ping', t: performance.now() }); }
+
+  function hostMsg(conn, d) {
+    if (!d || typeof d !== 'object') return;
+    let p = HOST.players.find((x) => x.conn === conn);
+    if (d.type === 'hello') {
+      if (p) return;
+      if (HOST.phase !== 'lobby') { conn.send({ type: 'busy' }); setTimeout(() => conn.close(), 300); return; }
+      const used = new Set(HOST.players.map((x) => x.slot));
+      const slot = [0, 1, 2, 3].find((i) => !used.has(i));
+      if (slot === undefined) { conn.send({ type: 'full' }); setTimeout(() => conn.close(), 300); return; }
+      const name = String(d.name || '').replace(/\s+/g, ' ').trim().slice(0, 12) || 'Joueur ' + (slot + 1);
+      p = { conn, slot, name, color: COLORS[slot], lat: Number.isFinite(+d.lat) ? +d.lat : 30, off: null, samples: [], meter: 0, flash: 0, sensor: d.sensor !== false, gone: false };
+      HOST.players.push(p);
+      HOST.players.sort((a, b) => a.slot - b.slot);
+      send(p, { type: 'welcome', slot, name, color: p.color });
+      for (let i = 0; i < 6; i++) setTimeout(() => ping(p), i * 120);
+      broadcastState();
+      sfx('good');
+      return;
+    }
+    if (!p) return;
+    switch (d.type) {
+      case 'pong': {
+        const now = performance.now(), rtt = now - d.t;
+        p.samples.push({ rtt, off: d.p - (d.t + rtt / 2) });
+        if (p.samples.length > 12) p.samples.shift();
+        p.off = p.samples.reduce((a, b) => (b.rtt < a.rtt ? b : a)).off; // l'échantillon le plus rapide est le plus fiable
+        p.rtt = rtt;
+        break;
+      }
+      case 'm': p.meter = +d.v || 0; if (typeof d.sensor === 'boolean') p.sensor = d.sensor; if (typeof d.up === 'boolean') p.up = d.up; break;
+      case 'lat': if (Number.isFinite(+d.v)) p.lat = +d.v; break;
+      case 'pk': if (p.cal && Number.isFinite(+d.ts)) calibPeak(p.cal, { mag: +d.mag || 0, raw: d.raw, t: hostAudioTime(p, +d.ts) }); break;
+      case 'test': p.flash = performance.now(); p.side = d.side; if (HOST.phase === 'lobby') sfx('good', 0.5); break;
+      case 'track': if (HOST.phase === 'lobby' && TRACKS.some((t) => t.id === d.id)) { HOST.trackId = d.id; broadcastState(); } break;
+      case 'start': if (HOST.phase === 'lobby') hostStart(); break;
+      case 'again': if (HOST.phase === 'results') backToLobby(); break;
+      case 'twerk': {
+        if (!G.running || !p.gp) return;
+        // horloge du téléphone -> horloge de la télé -> horloge audio
+        // puis on retire le décalage propre à ce téléphone (mesuré par la calibration)
+        registerTwerk(p.gp, hostAudioTime(p, d.ts) - (p.lat || 0) / 1000, ['L', 'R', 'C'].includes(d.side) ? d.side : 'C');
+        break;
+      }
+    }
+  }
+  // horloge du téléphone -> horloge de la télé -> temps du son entendu
+  function hostAudioTime(p, ts) {
+    const hostPerf = p.off != null ? ts - p.off : performance.now() - 40;
+    return ctx.currentTime + (hostPerf - performance.now()) / 1000 - outLat();
+  }
+  function hostDrop(conn) {
+    const p = HOST.players.find((x) => x.conn === conn);
+    if (!p || p.gone) return;
+    p.gone = true;
+    if (p.gp) p.gp.gone = true;
+    if (HOST.phase === 'lobby' || HOST.phase === 'results') HOST.players = HOST.players.filter((x) => x !== p);
+    broadcastState();
+  }
+
+  function hostStart() {
+    HOST.players = HOST.players.filter((p) => !p.gone);
+    if (!HOST.players.length) return;
+    ensureAudio();
+    HOST.phase = 'countdown';
+    broadcastState();
+    broadcast({ type: 'countdown', secs: 8 });
+    const many = HOST.players.length > 1;
+    say(many ? 'Tout le monde, téléphone dans la poche arrière, écran vers l’extérieur, à l’endroit !' : 'Téléphone dans la poche arrière, écran vers l’extérieur, à l’endroit !');
+    countdown(8, many ? 'Téléphones dans la poche arrière !' : 'Téléphone dans la poche arrière !',
+      settings.lr ? 'Écran vers l’extérieur, à l’endroit. BOUM : twerk. Tom grave : hanche à gauche. Tchak aigu : hanche à droite.' : 'Écran vers l’extérieur, à l’endroit. Twerkez sur chaque BOUM de la basse.',
+      () => {
+        HOST.phase = 'play';
+        broadcast({ type: 'play' });
+        startSong(trackById(HOST.trackId), HOST.players.map((p) => ({
+          name: p.name, color: p.color, gone: p.gone, ref: p,
+          onHit: (kind) => send(p, { type: 'hit', kind })
+        })));
+        G.players.forEach((gp) => { gp.ref.gp = gp; });
+      });
+  }
+  function hostSendResults(ranked) {
+    HOST.phase = 'results';
+    ranked.forEach((gp, i) => send(gp.ref, { type: 'results', place: i, of: ranked.length, rank: gp.rank, title: gp.title, score: gp.score }));
+    HOST.players = HOST.players.filter((p) => !p.gone);
+    broadcastState();
+  }
+  function backToLobby() {
+    stopGame();
+    HOST.phase = 'lobby';
+    for (const p of HOST.players) p.gp = null;
+    show('lobby');
+    renderTracks($('#lobby-tracks'), HOST.trackId, (id) => { HOST.trackId = id; settings.track = id; store.set('track', id); broadcastState(); }, false);
+    broadcast({ type: 'lobby' });
+    broadcastState();
+  }
+  function closeHost() {
+    broadcast({ type: 'bye' });
+    clearInterval(HOST.pingTimer);
+    setTimeout(() => { try { if (HOST.peer) HOST.peer.destroy(); } catch (e) { /* déjà fermé */ } HOST.peer = null; HOST.players = []; }, 200);
+    unlockScreen();
+  }
+
+  // ---------- MANETTE (téléphone) ----------
+  const P = { peer: null, conn: null, code: '', name: '', phase: 'lobby', meterTimer: null, welcomed: false, state: null };
+  function openJoin(code) {
+    role = 'pad';
+    show('join');
+    $('#join-code').value = code || store.get('lastCode', '');
+    $('#join-name').value = store.get('name', '');
+    $('#join-status').textContent = '';
+    (code ? $('#join-name') : $('#join-code')).focus();
+  }
+  function joinStatus(t, err) { const el = $('#join-status'); el.textContent = t; el.classList.toggle('err', !!err); }
+
+  $('#join-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const code = $('#join-code').value.replace(/\D/g, '').slice(0, 4);
+    const name = $('#join-name').value.trim().slice(0, 12);
+    if (code.length !== 4) { joinStatus('Le code fait 4 chiffres. Il est affiché en jaune sur la télé.', true); return; }
+    // dans le geste : capteur (iPhone), voix et écran allumé
+    enableMotion();
+    say('');
+    lockScreen();
+    store.set('name', name); store.set('lastCode', code);
+    padConnect(code, name);
+  });
+
+  function padCleanup() {
+    clearInterval(P.meterTimer);
+    try { if (P.conn) P.conn.close(); } catch (e) { /* déjà fermée */ }
+    try { if (P.peer) P.peer.destroy(); } catch (e) { /* déjà détruit */ }
+    P.conn = null; P.peer = null; P.welcomed = false;
+  }
+  function padConnect(code, name) {
+    padCleanup();
+    P.code = code; P.name = name;
+    if (typeof Peer === 'undefined') { joinStatus('Le module de connexion n’a pas pu se charger. Vérifie la connexion Internet et recharge la page.', true); return; }
+    joinStatus('Connexion à la télé…');
+    $('#join-btn').disabled = true;
+    const peer = new Peer(peerOpts());
+    P.peer = peer;
+    const fail = (msg) => { $('#join-btn').disabled = false; if (!P.welcomed) { joinStatus(msg, true); show('join'); } else padLost(msg); };
+    const timer = setTimeout(() => { if (!P.welcomed) { padCleanup(); fail('La télé ne répond pas. Vérifie le code, et que la télé affiche toujours le salon.'); } }, 12000);
+    peer.on('open', () => {
+      const conn = peer.connect(PREFIX + code, { reliable: true });
+      P.conn = conn;
+      conn.on('open', () => conn.send({ type: 'hello', name, sensor: motion.seen || undefined, lat: settings.lat }));
+      conn.on('data', padMsg);
+      conn.on('close', () => { if (P.conn === conn) { clearTimeout(timer); padLost('La télé a fermé le salon ou la connexion a coupé.'); } });
+    });
+    peer.on('error', (e) => { clearTimeout(timer); fail(peerError(e)); });
+    P.clearTimer = () => clearTimeout(timer);
+  }
+  function padSend(msg) { try { if (P.conn && P.conn.open) P.conn.send(msg); } catch (e) { /* connexion fermée */ } }
+  function padView(which) {
+    for (const k of ['lobby', 'pocket', 'result', 'lost']) $('#pad-' + k).hidden = k !== which;
+    $('#pad-conn').textContent = which === 'lost' ? 'Déconnecté' : 'Connecté à la télé';
+  }
+  function padMsg(d) {
+    if (!d || typeof d !== 'object') return;
+    switch (d.type) {
+      case 'ping': padSend({ type: 'pong', t: d.t, p: performance.now() }); break;
+      case 'welcome':
+        P.welcomed = true; if (P.clearTimer) P.clearTimer();
+        $('#join-btn').disabled = false;
+        $('#pad-name').textContent = d.name;
+        $('#pad-dot').style.background = d.color;
+        mountSensor('#pad-sensor-slot');
+        P.phase = 'lobby'; padView('lobby');
+        show('pad');
+        probeSensor();
+        clearInterval(P.meterTimer);
+        P.meterTimer = setInterval(() => {
+          if (P.phase !== 'lobby' && P.phase !== 'calib') return;
+          padSend({ type: 'm', v: Math.min(1.5, Math.max(motion.mag, motion.peak) / threshold()), sensor: motion.seen, up: motion.seen ? Math.abs(motion.gy) > 5 : undefined });
+        }, 150);
+        break;
+      case 'full': $('#join-btn').disabled = false; padCleanup(); joinStatus('La partie est complète : 4 joueurs maximum.', true); break;
+      case 'busy': $('#join-btn').disabled = false; padCleanup(); joinStatus('Une partie est en cours. Réessaie quand elle sera finie.', true); break;
+      case 'state': P.state = d; renderPadTracks(); $('#pad-lr').textContent = d.lr ? 'Ce tour : BOUM + gauche / droite.' : 'Ce tour : seulement les BOUM (mode débutant).'; break;
+      case 'lobby': P.phase = 'lobby'; padView('lobby'); break;
+      case 'countdown': {
+        P.phase = 'countdown';
+        padView('pocket');
+        $('#pad-huge').textContent = 'Dans la poche !';
+        $('#pad-sub').textContent = motion.seen ? 'Glisse le téléphone dans ta poche arrière, écran vers l’extérieur, à l’endroit. BOUM = twerk, tom grave = gauche, tchak aigu = droite.' : 'Pas de capteur sur cet appareil : appuie sur ←, ● ou → au bon moment.';
+        $('#pad-taps').hidden = motion.seen;
+        let s = d.secs || 8;
+        $('#pad-count').textContent = s;
+        clearInterval(P.cd);
+        P.cd = setInterval(() => { s--; $('#pad-count').textContent = s > 0 ? s : ''; if (s <= 0) clearInterval(P.cd); }, 1000);
+        vibrate([200, 100, 200]);
+        lockScreen();
+        break;
+      }
+      case 'play':
+        P.phase = 'play';
+        clearInterval(P.cd); $('#pad-count').textContent = '';
+        $('#pad-huge').textContent = 'Twerke !';
+        $('#pad-sub').textContent = 'BOUM = twerk, tom grave = gauche, tchak aigu = droite. Ton score s’affiche sur la télé.';
+        break;
+      case 'hit': if (d.kind === 'perfect') vibrate(35); else if (d.kind === 'good') vibrate(20); break;
+      case 'results':
+        P.phase = 'results';
+        padView('result');
+        $('#pad-place').textContent = d.of > 1 ? placeText(d.place) + ' sur ' + d.of : 'Terminé';
+        $('#pad-rank').textContent = d.rank;
+        $('#pad-title').textContent = d.title;
+        $('#pad-score').textContent = fmt(d.score);
+        vibrate([80, 60, 80, 60, 300]);
+        break;
+      case 'calib':
+        motion.calTh = 0;
+        if (d.on) {
+          P.phase = 'calib'; padView('pocket');
+          $('#pad-count').textContent = '';
+          $('#pad-huge').textContent = 'Calibration';
+          $('#pad-sub').textContent = 'Téléphone dans la poche arrière, écran vers l’extérieur, à l’endroit. Écoute la télé et suis les consignes.';
+          $('#pad-taps').hidden = true;
+          vibrate([200, 100, 200]); lockScreen();
+        } else { P.phase = 'lobby'; padView('lobby'); }
+        break;
+      case 'calstep': motion.calTh = d.step ? 5 : 0; if (d.step) vibrate(60); break;
+      case 'setcal':
+        if (d.sens) settings.sens = d.sens;
+        if (typeof d.flip === 'boolean') settings.flip = d.flip;
+        if (Number.isFinite(d.lat)) settings.lat = d.lat;
+        store.set('sens', settings.sens); store.set('flip', settings.flip); store.set('lat', settings.lat);
+        syncSettings(); $('#flip').checked = settings.flip;
+        break;
+      case 'frenzy':
+        if (P.phase !== 'play') break;
+        $('#pad-huge').textContent = d.on ? 'FRÉNÉSIE !' : 'Twerke !';
+        vibrate(d.on ? [400, 100, 400] : [100, 80, 100]);
+        break;
+      case 'bye': padLost('La télé a fermé le salon.'); break;
+    }
+  }
+  function renderPadTracks() {
+    const box = $('#pad-tracks'), st = P.state;
+    if (!st) return;
+    box.textContent = '';
+    for (const t of st.tracks) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'track-btn';
+      b.setAttribute('aria-pressed', String(t.id === st.trackId));
+      b.innerHTML = '<span class="name"></span><span class="level">' + [1, 2, 3].map((i) => '<i class="' + (i <= t.level ? 'on' : '') + '"></i>').join('') + '</span><span class="meta"></span>';
+      b.querySelector('.name').textContent = t.name;
+      b.querySelector('.meta').textContent = t.bpm + ' BPM';
+      b.addEventListener('click', () => padSend({ type: 'track', id: t.id }));
+      box.appendChild(b);
+    }
+  }
+  function padTwerk(src, at, side) {
+    if (P.phase === 'play') padSend({ type: 'twerk', ts: at || performance.now(), side: side || 'C' });
+    else if (P.phase === 'lobby' && src === 'motion') { testFlash(side); padSend({ type: 'test', side }); }
+  }
+  function padLost(msg) {
+    clearInterval(P.meterTimer); clearInterval(P.cd);
+    P.phase = 'lost';
+    $('#pad-lost-msg').textContent = msg;
+    show('pad'); padView('lost');
+  }
+  function vibrate(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) { /* pas de vibreur */ } }
+
+  // ---------- Entrées ----------
+  cv.addEventListener('pointerdown', (e) => { e.preventDefault(); onTwerk('tap', 0, e.clientX < W / 3 ? 'L' : e.clientX > W * 2 / 3 ? 'R' : 'C'); });
+  document.querySelectorAll('#pad-taps .btn').forEach((b) => b.addEventListener('pointerdown', (e) => { e.preventDefault(); padTwerk('button', performance.now(), b.dataset.side); }));
+  window.addEventListener('keydown', (e) => {
+    if (!G.running) return;
+    if (e.code === 'Escape') { abortGame(); return; }
+    if (e.repeat || role !== 'solo') return;
+    if (e.code === 'ArrowLeft') { e.preventDefault(); onTwerk('key', 0, 'L'); }
+    else if (e.code === 'ArrowRight') { e.preventDefault(); onTwerk('key', 0, 'R'); }
+    else if (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyJ' || e.code === 'KeyF') { e.preventDefault(); onTwerk('key', 0, 'C'); }
+  });
+  const quit = $('#quit');
+  quit.addEventListener('pointerdown', (e) => { e.preventDefault(); G.quitStart = performance.now(); });
+  const cancelQuit = () => { G.quitStart = 0; quit.style.setProperty('--p', '0%'); };
+  quit.addEventListener('pointerup', cancelQuit);
+  quit.addEventListener('pointerleave', cancelQuit);
+  quit.addEventListener('pointercancel', cancelQuit);
+
+  function abortGame() {
+    stopGame(); say('');
+    if (role === 'host') backToLobby(); else show('solo');
+  }
+
+  $('#m-solo').addEventListener('click', openSolo);
+  $('#m-host').addEventListener('click', openHost);
+  $('#m-pad').addEventListener('click', () => openJoin(''));
+  $('#solo-start').addEventListener('click', soloStart);
+  $('#solo-calib').addEventListener('click', () => { ensureAudio(); enableMotion(); say(''); startCalib(); });
+  $('#host-calib').addEventListener('click', startCalib);
+  $('#calib-again').addEventListener('click', () => { if (role === 'solo') enableMotion(); startCalib(); });
+  $('#calib-done').addEventListener('click', leaveCalib);
+  $('#vis-test').addEventListener('click', visTest);
+  $('#vis').addEventListener('input', (e) => { settings.vis = +e.target.value; store.set('vis', settings.vis); $('#vis-out').textContent = (settings.vis > 0 ? '+' : '') + settings.vis + ' ms'; });
+  $('#vis').value = settings.vis; $('#vis-out').textContent = (settings.vis > 0 ? '+' : '') + settings.vis + ' ms';
+  $('#host-start').addEventListener('click', hostStart);
+  $('#host-leave').addEventListener('click', () => { closeHost(); role = 'none'; show('home'); });
+  $('#pad-start').addEventListener('click', () => padSend({ type: 'start' }));
+  $('#pad-again').addEventListener('click', () => padSend({ type: 'again' }));
+  $('#pad-leave').addEventListener('click', () => { padCleanup(); unlockScreen(); role = 'none'; show('home'); });
+  $('#pad-reconnect').addEventListener('click', () => { enableMotion(); lockScreen(); show('join'); padConnect(P.code, P.name); });
+  document.querySelectorAll('[data-home]').forEach((b) => b.addEventListener('click', () => { padCleanup(); unlockScreen(); role = 'none'; show('home'); }));
+  $('#cancel').addEventListener('click', () => {
+    clearCountdown(); say('');
+    if (role === 'host') backToLobby(); else { unlockScreen(); show('solo'); }
+  });
+  $('#again').addEventListener('click', () => {
+    if (role === 'host') backToLobby();
+    else { ensureAudio(); if (G.input === 'motion') say('Glisse ton téléphone dans ta poche arrière, écran vers l’extérieur, à l’endroit.'); soloCountdown(); }
+  });
+  $('#menu').addEventListener('click', () => {
+    if (role === 'host') { closeHost(); role = 'none'; show('home'); } else show('solo');
+  });
+
+  document.querySelectorAll('[data-lr]').forEach((cb) => {
+    cb.checked = settings.lr;
+    cb.addEventListener('change', () => {
+      settings.lr = cb.checked; store.set('lr', settings.lr);
+      document.querySelectorAll('[data-lr]').forEach((o) => { o.checked = settings.lr; });
+      if (role === 'host') broadcastState();
+    });
+  });
+  $('#flip').checked = settings.flip;
+  $('#flip').addEventListener('change', (e) => { settings.flip = e.target.checked; store.set('flip', settings.flip); });
+  $('#g3d').checked = settings.g3d;
+  $('#g3d').addEventListener('change', (e) => { settings.g3d = e.target.checked; store.set('g3d', settings.g3d); });
+  syncSettings();
+  const salon = new URLSearchParams(location.search).get('salon');
+  if (salon && /^\d{4}$/.test(salon)) openJoin(salon); else show('home');
+  probeSensor();
+})();
+</script>
+
+</body>
+</html>
